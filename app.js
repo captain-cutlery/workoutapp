@@ -5,39 +5,40 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v12';
+const APP_VERSION = 'v13';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
 // type: 'reps' for rep-counted work, 'time' for holds (seconds).
 // Variations run easiest -> hardest. Ladders follow the r/bodyweightfitness
-// Recommended Routine progression guides. `range` is the RR working target:
-// strength work is 3x5-8 (add a rep per session, advance at 8); isometrics are
-// 10-30s (advance at 30s); core is 3x8-12. Train at failure-1 (RIR ~1).
+// Recommended Routine progression guides. `range` is the working target:
+// strength work uses an 8-12 rep range (the RR's higher-rep/endurance option:
+// add a rep per session, advance at 12); isometrics are 10-30s (advance at
+// 30s). Train at failure-1 (RIR ~1).
 const MOVEMENTS = [
   {
-    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps', range: [5, 8],
+    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps', range: [8, 12],
     cues: 'Straight line head to toe, don’t let the hips sag. Lower until the chest nearly touches, elbows in (not flared), lock out and protract the shoulders at the top.',
     variations: ['Vertical (wall)', 'Incline', 'Full', 'Diamond', 'Pseudo-planche', 'Rings', 'RTO'],
   },
   {
-    id: 'dips', name: 'Dips', emoji: '🪑', group: 'Push', type: 'reps', range: [5, 8],
+    id: 'dips', name: 'Dips', emoji: '🪑', group: 'Push', type: 'reps', range: [8, 12],
     cues: 'Shoulders down and back. Lower under control until the upper arms are about parallel, then lock out hard at the top. (RR uses parallel bars, not bench dips.)',
     variations: ['Support hold (s)', 'Negative', 'Parallel bar', 'Weighted', 'Ring', 'Ring turned-out'],
   },
   {
-    id: 'pullup', name: 'Pull-ups', emoji: '🆙', group: 'Pull', type: 'reps', range: [5, 8],
+    id: 'pullup', name: 'Pull-ups', emoji: '🆙', group: 'Pull', type: 'reps', range: [8, 12],
     cues: 'Start from a full dead hang. Pull the chin over the bar, no kipping, lower slowly and fully each rep.',
     variations: ['Scapular pulls', 'Arch hangs', 'Negative', 'Pull-up', 'Weighted', 'Archer', 'One-arm progression'],
   },
   {
-    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps', range: [5, 8],
+    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps', range: [8, 12],
     cues: 'Body straight and rigid. Squeeze the shoulder blades, pull the chest to the bar, control the way down. Lower the body angle to make it harder.',
     variations: ['Vertical', 'Incline', 'Horizontal', 'Wide', 'Weighted', 'Tuck front-lever pulls', 'Archer'],
   },
   {
-    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps', range: [5, 8],
+    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps', range: [8, 12],
     cues: 'Full depth — hips below knees. Knees track over toes, chest up, heels planted. Stand tall to finish.',
     variations: ['Assisted', 'Squat', 'Split squat', 'Bulgarian split squat', 'Beginner shrimp', 'Intermediate shrimp', 'Advanced shrimp', 'Pistol'],
   },
@@ -47,7 +48,7 @@ const MOVEMENTS = [
     variations: ['Two-leg', 'Single-leg', 'Deficit (off a step)', 'Single-leg deficit'],
   },
   {
-    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [5, 8],
+    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [8, 12],
     cues: 'Brace and squeeze the glutes to flatten the low back. Send the hips back, hinge from the hips with a neutral spine — never round the back. (RR uses a weighted RDL if you have a barbell.)',
     variations: ['Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
   },
@@ -81,15 +82,15 @@ const MOVEMENTS = [
 const byId = (id) => MOVEMENTS.find((m) => m.id === id);
 
 // Default suggested full-body session (KBoges leans full-body, frequent, low-fuss).
-// Mirrors the Recommended Routine pairs + core triplet (3x5-8, failure-1).
+// Mirrors the Recommended Routine pairs + core triplet (3x8-12, failure-1).
 // Fully editable via the "Edit" link on Today.
 const DEFAULT_SESSION = [
-  { id: 'pullup',   target: 'Pair A · 3×5–8' },
-  { id: 'squat',    target: 'Pair A · 3×5–8' },
-  { id: 'dips',     target: 'Pair B · 3×5–8' },
-  { id: 'hinge',    target: 'Pair B · 3×5–8' },
-  { id: 'row',      target: 'Pair C · 3×5–8' },
-  { id: 'pushup',   target: 'Pair C · 3×5–8' },
+  { id: 'pullup',   target: 'Pair A · 3×8–12' },
+  { id: 'squat',    target: 'Pair A · 3×8–12' },
+  { id: 'dips',     target: 'Pair B · 3×8–12' },
+  { id: 'hinge',    target: 'Pair B · 3×8–12' },
+  { id: 'row',      target: 'Pair C · 3×8–12' },
+  { id: 'pushup',   target: 'Pair C · 3×8–12' },
   { id: 'core',     target: 'Triplet · 3×10–30s' },
   { id: 'legraise', target: 'Triplet · 3×8–12' },
 ];
