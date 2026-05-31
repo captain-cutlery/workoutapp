@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v16';
+const APP_VERSION = 'v17';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
