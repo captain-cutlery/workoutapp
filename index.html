@@ -57,6 +57,7 @@
       <div class="sheet-grip"></div>
       <h2 id="sheetTitle">Log movement</h2>
       <p id="sheetCues" class="cues"></p>
+      <div id="lastTime" class="last-time" hidden></div>
 
       <label class="field-label">Variation</label>
       <div id="variationRow" class="chip-row"></div>
@@ -130,6 +131,15 @@
 
       <label class="field-label">Weight unit</label>
       <div id="unitRow" class="chip-row"></div>
+
+      <label class="field-label">Workout reminder</label>
+      <p class="cues">Pick days &amp; a time, then add a recurring reminder to your phone's calendar — works offline, no permissions.</p>
+      <div id="remDays" class="chip-row"></div>
+      <div class="rem-time-row">
+        <span>Time</span>
+        <input id="remTime" type="time" class="time-input" value="18:00" />
+      </div>
+      <button id="addReminder" class="btn-outline" style="margin-top:12px">📅 Add reminder to calendar</button>
 
       <div class="sheet-actions">
         <button id="saveSettings" class="btn-primary">Save</button>
