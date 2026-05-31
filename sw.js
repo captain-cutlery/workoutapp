@@ -1,7 +1,7 @@
 /* Service worker.
    Strategy: network-first for our own files when online (so updates land on the
    next launch automatically), falling back to the cache when offline. */
-const CACHE = 'cal-log-v11';
+const CACHE = 'cal-log-v12';
 const ASSETS = [
   './',
   './index.html',

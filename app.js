@@ -5,40 +5,41 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v11';
+const APP_VERSION = 'v12';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
 // type: 'reps' for rep-counted work, 'time' for holds (seconds).
-// Variations run easiest -> hardest so progression is obvious. The ladders draw
-// on the r/bodyweightfitness Recommended Routine. `range` is the working target:
-// when you can hit the top of the range with good form, advance to the next rung.
+// Variations run easiest -> hardest. Ladders follow the r/bodyweightfitness
+// Recommended Routine progression guides. `range` is the RR working target:
+// strength work is 3x5-8 (add a rep per session, advance at 8); isometrics are
+// 10-30s (advance at 30s); core is 3x8-12. Train at failure-1 (RIR ~1).
 const MOVEMENTS = [
   {
-    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps', range: [8, 12],
-    cues: 'Body in one line, brace your core. Chest to the floor, elbows ~45°. Lower slowly, press all the way up.',
-    variations: ['Wall', 'Incline', 'Knee', 'Standard', 'Diamond', 'Pseudo-planche', 'Archer', 'One-arm progression'],
+    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps', range: [5, 8],
+    cues: 'Straight line head to toe, don’t let the hips sag. Lower until the chest nearly touches, elbows in (not flared), lock out and protract the shoulders at the top.',
+    variations: ['Vertical (wall)', 'Incline', 'Full', 'Diamond', 'Pseudo-planche', 'Rings', 'RTO'],
   },
   {
     id: 'dips', name: 'Dips', emoji: '🪑', group: 'Push', type: 'reps', range: [5, 8],
-    cues: 'Shoulders down and back. Lower under control until upper arms are parallel, then lock out at the top.',
-    variations: ['Support hold (s)', 'Negative', 'Bench / chair', 'Parallel bar', 'Ring', 'Ring (turned out)'],
+    cues: 'Shoulders down and back. Lower under control until the upper arms are about parallel, then lock out hard at the top. (RR uses parallel bars, not bench dips.)',
+    variations: ['Support hold (s)', 'Negative', 'Parallel bar', 'Weighted', 'Ring', 'Ring turned-out'],
   },
   {
     id: 'pullup', name: 'Pull-ups', emoji: '🆙', group: 'Pull', type: 'reps', range: [5, 8],
-    cues: 'Start from a full dead hang. Pull chin over the bar, no kipping. Lower slowly and fully each rep.',
-    variations: ['Dead hang (s)', 'Scapular pulls', 'Negative', 'Band-assisted', 'Standard', 'Wide', 'Archer', 'One-arm progression'],
+    cues: 'Start from a full dead hang. Pull the chin over the bar, no kipping, lower slowly and fully each rep.',
+    variations: ['Scapular pulls', 'Arch hangs', 'Negative', 'Pull-up', 'Weighted', 'Archer', 'One-arm progression'],
   },
   {
-    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps', range: [8, 12],
-    cues: 'Body straight and rigid. Squeeze shoulder blades, pull chest to the bar, control the way down.',
-    variations: ['Vertical', 'Incline (feet back)', 'Horizontal', 'Feet elevated', 'Wide', 'Tuck front-lever row'],
+    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps', range: [5, 8],
+    cues: 'Body straight and rigid. Squeeze the shoulder blades, pull the chest to the bar, control the way down. Lower the body angle to make it harder.',
+    variations: ['Vertical', 'Incline', 'Horizontal', 'Wide', 'Weighted', 'Tuck front-lever pulls', 'Archer'],
   },
   {
-    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps', range: [8, 12],
+    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps', range: [5, 8],
     cues: 'Full depth — hips below knees. Knees track over toes, chest up, heels planted. Stand tall to finish.',
-    variations: ['Box / assisted', 'Bodyweight', 'Tempo (3s down)', 'Split squat', 'Bulgarian split squat', 'Beginner shrimp', 'Pistol progression'],
+    variations: ['Assisted', 'Squat', 'Split squat', 'Bulgarian split squat', 'Beginner shrimp', 'Intermediate shrimp', 'Advanced shrimp', 'Pistol'],
   },
   {
     id: 'calf', name: 'Calf raises', emoji: '🦶', group: 'Legs', type: 'reps', range: [8, 12],
@@ -46,29 +47,29 @@ const MOVEMENTS = [
     variations: ['Two-leg', 'Single-leg', 'Deficit (off a step)', 'Single-leg deficit'],
   },
   {
-    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [8, 12],
-    cues: 'Drive through the heels and squeeze the glutes hard at the top, ribs down. Hinge from the hips with a neutral spine — never round the back.',
-    variations: ['Glute bridge', 'Single-leg bridge', 'Hip thrust', 'Good morning', 'Banded leg curl', 'Nordic (assisted)', 'Nordic curl'],
+    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [5, 8],
+    cues: 'Brace and squeeze the glutes to flatten the low back. Send the hips back, hinge from the hips with a neutral spine — never round the back. (RR uses a weighted RDL if you have a barbell.)',
+    variations: ['Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
   },
   {
-    id: 'core', name: 'Core hold', emoji: '🧱', group: 'Core', type: 'time', range: [30, 60],
-    cues: 'Brace abs hard, ribs down, neutral spine. No sagging hips. Quality tension beats long sloppy holds.',
-    variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Hollow rocks', 'Ab-wheel from knees', 'Standing ab-wheel'],
+    id: 'core', name: 'Core (anti-extension)', emoji: '🧱', group: 'Core', type: 'time', range: [10, 30],
+    cues: 'Anti-extension: resist the low back arching. Brace abs hard, ribs down, neutral spine, no sagging hips. Quality tension over long sloppy holds.',
+    variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Ab-wheel from knees', 'Standing ab-wheel'],
   },
   {
-    id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
+    id: 'legraise', name: 'Leg raises (anti-rotation)', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
     cues: 'Move slowly with no swinging. Posteriorly tilt the pelvis so the lower back stays flat, and control the way down.',
     variations: ['Lying knee raises', 'Lying leg raises', 'Hanging knee raises', 'Hanging leg raises', 'Toes-to-bar'],
   },
   {
     id: 'lsit', name: 'L-sit', emoji: '📐', group: 'Core', type: 'time', range: [10, 30],
-    cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds.',
+    cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds; advance when you hold 30s for all sets.',
     variations: ['Foot-supported (s)', 'Tuck hold (s)', 'One-leg (s)', 'Full L-sit (s)'],
   },
   {
-    id: 'handstand', name: 'Handstand', emoji: '🤸', group: 'Skill', type: 'time', range: [30, 60],
-    cues: 'Practise while fresh. Hands shoulder-width, push tall through the shoulders, squeeze glutes and point toes. Stack hips over hands.',
-    variations: ['Plank → pike (s)', 'Wall plank (feet low) (s)', 'Wall handstand chest-in (s)', 'Wall handstand back-to-wall (s)', 'Freestanding kick-up (s)'],
+    id: 'handstand', name: 'Handstand', emoji: '🤸', group: 'Skill', type: 'time', range: [10, 30],
+    cues: 'Practise while fresh, before strength work. Hands shoulder-width, push tall through the shoulders, squeeze glutes and point toes. Stack hips over hands.',
+    variations: ['Plank → pike (s)', 'Wall plank, feet low (s)', 'Wall handstand chest-in (s)', 'Wall handstand back-to-wall (s)', 'Freestanding kick-up (s)'],
   },
   {
     id: 'bike', name: 'Bike HIIT', emoji: '🚴', group: 'Cardio', type: 'time', hiit: true,
@@ -80,11 +81,17 @@ const MOVEMENTS = [
 const byId = (id) => MOVEMENTS.find((m) => m.id === id);
 
 // Default suggested full-body session (KBoges leans full-body, frequent, low-fuss).
+// Mirrors the Recommended Routine pairs + core triplet (3x5-8, failure-1).
+// Fully editable via the "Edit" link on Today.
 const DEFAULT_SESSION = [
-  { id: 'pushup', target: '2–3 sets · RIR 1–2' },
-  { id: 'pullup', target: '2–3 sets · RIR 1–2' },
-  { id: 'squat',  target: '2–3 sets · RIR 1–2' },
-  { id: 'core',   target: '2–3 quality holds' },
+  { id: 'pullup',   target: 'Pair A · 3×5–8' },
+  { id: 'squat',    target: 'Pair A · 3×5–8' },
+  { id: 'dips',     target: 'Pair B · 3×5–8' },
+  { id: 'hinge',    target: 'Pair B · 3×5–8' },
+  { id: 'row',      target: 'Pair C · 3×5–8' },
+  { id: 'pushup',   target: 'Pair C · 3×5–8' },
+  { id: 'core',     target: 'Triplet · 3×10–30s' },
+  { id: 'legraise', target: 'Triplet · 3×8–12' },
 ];
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
@@ -527,13 +534,18 @@ function openSheet(mvId, editId) {
   // working range, and suggest advancing a rung once you top it on this variation.
   const ph = document.getElementById('progressHint');
   if (!editId && !isBike && m.range) {
-    const unit = m.type === 'time' ? 's' : ' reps';
+    const isHold = m.type === 'time';
     const [lo, hi] = m.range;
-    let txt = `<span class="ph-label">Target ${lo}–${hi}${unit}</span> at a hard but clean effort (RIR 1–2). Hit the top with good form, then move up a rung.`;
+    const target = isHold ? `3 × ${lo}–${hi}s` : `3 × ${lo}–${hi}`;
+    const advice = isHold
+      ? `hold for time, advance when you reach ${hi}s on all 3 sets`
+      : `add a rep per session, advance when you hit 3 × ${hi}`;
+    let txt = `<span class="ph-label">RR target ${target}</span> at failure − 1 (leave ~1 in the tank); ${advice}.`;
     if (readyToAdvance(m)) {
       const cur = m.variations[variation];
       const next = m.variations[Math.min(variation + 1, m.variations.length - 1)];
-      if (next !== cur) txt = `<span class="ph-label ph-go">Ready to progress 🎉</span> You're topping ${hi}${unit} on <b>${cur}</b> — try <b>${next}</b> next.`;
+      const u = isHold ? 's' : '';
+      if (next !== cur) txt = `<span class="ph-label ph-go">Ready to progress 🎉</span> You're topping ${hi}${u} on <b>${cur}</b> — try <b>${next}</b> next.`;
     }
     ph.innerHTML = txt;
     ph.hidden = false;
