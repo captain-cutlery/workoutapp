@@ -14,7 +14,10 @@
 </head>
 <body>
   <header class="topbar">
-    <h1 id="topTitle">Today</h1>
+    <div class="topbar-row">
+      <h1 id="topTitle">Today</h1>
+      <button id="settingsBtn" class="icon-btn" aria-label="Settings">⚙</button>
+    </div>
     <div id="weekStrip" class="week-strip" aria-label="This week"></div>
   </header>
 
@@ -70,6 +73,16 @@
       <label class="field-label">Effort — stop a couple reps shy of failure</label>
       <div id="rirRow" class="chip-row"></div>
 
+      <label class="field-label">Added weight (<span id="weightUnitLabel">kg</span>) — optional</label>
+      <div class="stepper">
+        <button class="step-btn" data-wstep="-2.5" aria-label="Less weight">−</button>
+        <input id="weightInput" class="value-input" type="number" inputmode="decimal" value="0" min="0" step="0.5" />
+        <button class="step-btn" data-wstep="2.5" aria-label="More weight">＋</button>
+      </div>
+
+      <label class="field-label">Note — optional</label>
+      <input id="noteInput" class="note-input" type="text" placeholder="How it felt, tweaks, niggles…" />
+
       <div class="sheet-actions">
         <button id="saveSet" class="btn-primary">Save set</button>
         <button id="deleteSet" class="btn-outline danger" hidden>Delete this set</button>
@@ -90,6 +103,37 @@
       <div class="sheet-actions">
         <button id="saveSession" class="btn-primary">Save session</button>
         <button id="resetSession" class="btn-ghost">Reset to default</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings sheet -->
+  <div id="settingsSheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close-settings></div>
+    <div class="sheet-card" role="dialog" aria-modal="true">
+      <div class="sheet-grip"></div>
+      <h2>Settings</h2>
+
+      <label class="field-label">Rest timer</label>
+      <label class="toggle-row">
+        <span>Auto-start rest after each set</span>
+        <input type="checkbox" id="setAutoRest" />
+      </label>
+
+      <label class="field-label">Default rest length</label>
+      <div id="restLenRow" class="chip-row"></div>
+      <div class="stepper" style="margin-top:10px">
+        <button class="step-btn" data-restadj="-15" aria-label="Less">−</button>
+        <input id="restLenInput" class="value-input" type="number" inputmode="numeric" value="90" min="5" />
+        <button class="step-btn" data-restadj="15" aria-label="More">＋</button>
+      </div>
+
+      <label class="field-label">Weight unit</label>
+      <div id="unitRow" class="chip-row"></div>
+
+      <div class="sheet-actions">
+        <button id="saveSettings" class="btn-primary">Save</button>
+        <button class="btn-ghost" data-close-settings>Close</button>
       </div>
     </div>
   </div>

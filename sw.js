@@ -1,5 +1,5 @@
 /* Offline-first service worker. Bump CACHE on each release to refresh assets. */
-const CACHE = 'cal-log-v2';
+const CACHE = 'cal-log-v4';
 const ASSETS = [
   './',
   './index.html',

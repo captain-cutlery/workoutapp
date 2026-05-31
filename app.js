@@ -33,9 +33,29 @@ const MOVEMENTS = [
     variations: ['Box / assisted', 'Bodyweight', 'Tempo (3s down)', 'Split squat', 'Pistol progression'],
   },
   {
+    id: 'calf', name: 'Calf raises', emoji: '🦶', group: 'Legs', type: 'reps',
+    cues: 'Full range — stretch at the bottom, rise high onto the toes and pause at the top. Slow and controlled, no bouncing.',
+    variations: ['Two-leg', 'Single-leg', 'Deficit (off a step)', 'Single-leg deficit'],
+  },
+  {
+    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps',
+    cues: 'Drive through the heels and squeeze the glutes hard at the top, ribs down. Hinge from the hips with a neutral spine — never round the back.',
+    variations: ['Glute bridge', 'Single-leg bridge', 'Hip thrust', 'Good morning', 'Nordic (assisted)', 'Nordic curl'],
+  },
+  {
     id: 'core', name: 'Core hold', emoji: '🧱', group: 'Core', type: 'time',
     cues: 'Brace abs hard, ribs down, neutral spine. No sagging hips. Quality tension beats long sloppy holds.',
     variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Hollow rocks'],
+  },
+  {
+    id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps',
+    cues: 'Move slowly with no swinging. Posteriorly tilt the pelvis so the lower back stays flat, and control the way down.',
+    variations: ['Lying knee raises', 'Lying leg raises', 'Hanging knee raises', 'Hanging leg raises', 'Toes-to-bar'],
+  },
+  {
+    id: 'lsit', name: 'L-sit', emoji: '📐', group: 'Core', type: 'time',
+    cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds.',
+    variations: ['Foot-supported (s)', 'Tuck hold (s)', 'One-leg (s)', 'Full L-sit (s)'],
   },
 ];
 
@@ -68,6 +88,9 @@ function loadLog() {
 }
 function saveLog(log) { localStorage.setItem(KEY, JSON.stringify(log)); }
 function makeId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 let LOG = loadLog();
 
@@ -80,6 +103,15 @@ function loadSession() {
 }
 function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
 let SESSION = loadSession();
+
+const SETTINGS_KEY = 'cal_settings_v1';
+const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg' };
+function loadSettings() {
+  try { return { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}) }; }
+  catch { return { ...DEFAULT_SETTINGS }; }
+}
+function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+let SETTINGS = loadSettings();
 
 // ---------- Date helpers ----------
 const dayKey = (d) => {
@@ -223,7 +255,7 @@ function movementCard(m, sub, tally, count) {
 function summarize(m, entries) {
   if (!entries.length) return '';
   const unit = m.type === 'time' ? 's' : '';
-  return entries.map((e) => e.value + unit).join(' · ');
+  return entries.map((e) => e.value + unit + (e.weight ? `+${e.weight}` : '')).join(' · ');
 }
 
 function renderEntryList(items) { return `<div class="card">${renderEntryRows(items, true)}</div>`; }
@@ -235,9 +267,11 @@ function renderEntryRows(items, editable) {
       const m = byId(e.movement);
       const unit = m && m.type === 'time' ? 's' : ' reps';
       const tap = editable ? ` data-edit="${e.id}"` : '';
+      const w = e.weight ? ` <span class="wtag">+${e.weight}${SETTINGS.unit}</span>` : '';
+      const note = e.note ? `<div class="e-note">“${escapeHtml(e.note)}”</div>` : '';
       return `<div class="entry${editable ? ' tappable' : ''}"${tap}><div>${m ? m.emoji : ''} ${m ? m.name : e.movement}
-        <div class="e-meta">${e.variation} · ${e.rir}</div></div>
-        <div class="e-val"><b>${e.value}</b>${unit}${editable ? ' <span class="chev">›</span>' : ''}</div></div>`;
+        <div class="e-meta">${e.variation} · ${e.rir}</div>${note}</div>
+        <div class="e-val"><b>${e.value}</b>${unit}${w}${editable ? ' <span class="chev">›</span>' : ''}</div></div>`;
     })
     .join('');
 }
@@ -312,7 +346,7 @@ let sheetState = { mv: null, variation: 0, rir: 1, editId: null };
 
 // Open to log a new set (mvId) OR edit an existing entry (editId).
 function openSheet(mvId, editId) {
-  let m, variation, rir, value;
+  let m, variation, rir, value, weight, note;
   if (editId) {
     const e = LOG.find((x) => x.id === editId);
     if (!e) return;
@@ -320,11 +354,15 @@ function openSheet(mvId, editId) {
     variation = Math.max(0, m.variations.indexOf(e.variation));
     rir = Math.max(0, RIR_OPTIONS.indexOf(e.rir));
     value = e.value;
+    weight = e.weight || 0;
+    note = e.note || '';
   } else {
     m = byId(mvId);
     variation = defaultVariation(m);
     rir = 1;
     value = m.type === 'time' ? 30 : 8;
+    weight = 0;
+    note = '';
   }
   sheetState = { mv: m.id, variation, rir, editId: editId || null };
 
@@ -332,6 +370,9 @@ function openSheet(mvId, editId) {
   document.getElementById('sheetCues').textContent = m.cues;
   document.getElementById('valueLabel').textContent = m.type === 'time' ? 'Seconds' : 'Reps';
   document.getElementById('valueInput').value = value;
+  document.getElementById('weightInput').value = weight;
+  document.getElementById('noteInput').value = note;
+  document.getElementById('weightUnitLabel').textContent = SETTINGS.unit;
   document.getElementById('saveSet').textContent = editId ? 'Save changes' : 'Save set';
   document.getElementById('deleteSet').hidden = !editId;
 
@@ -366,10 +407,17 @@ function renderChips(rowId, items, selected, onPick) {
 function closeSheet() { sheet.hidden = true; }
 sheet.querySelectorAll('[data-close]').forEach((el) => (el.onclick = closeSheet));
 
-document.querySelectorAll('.step-btn').forEach((b) => {
+document.querySelectorAll('[data-step]').forEach((b) => {
   b.onclick = () => {
     const inp = document.getElementById('valueInput');
     inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.step, 10));
+  };
+});
+
+document.querySelectorAll('[data-wstep]').forEach((b) => {
+  b.onclick = () => {
+    const inp = document.getElementById('weightInput');
+    inp.value = Math.max(0, Math.round(((parseFloat(inp.value) || 0) + parseFloat(b.dataset.wstep)) * 10) / 10);
   };
 });
 
@@ -379,24 +427,32 @@ document.getElementById('saveSet').onclick = () => {
   if (!value) return;
   const variation = m.variations[sheetState.variation];
   const rir = RIR_OPTIONS[sheetState.rir];
+  const weight = Math.max(0, parseFloat(document.getElementById('weightInput').value) || 0);
+  const note = document.getElementById('noteInput').value.trim();
 
   if (sheetState.editId) {
     const e = LOG.find((x) => x.id === sheetState.editId);
-    if (e) { e.value = value; e.variation = variation; e.rir = rir; }
+    if (e) { e.value = value; e.variation = variation; e.rir = rir; e.weight = weight; e.note = note; }
     saveLog(LOG);
     render();
     closeSheet();
     return;
   }
 
-  LOG.push({ id: makeId(), ts: Date.now(), day: TODAY, movement: m.id, variation, rir, value });
+  LOG.push({ id: makeId(), ts: Date.now(), day: TODAY, movement: m.id, variation, rir, value, weight, note });
   saveLog(LOG);
   render();
 
-  // Offer a rest timer right after logging.
+  // Auto-start the rest timer if enabled; otherwise offer quick presets.
+  if (SETTINGS.autoRest) {
+    startRest(SETTINGS.restDefault);
+    closeSheet();
+    return;
+  }
   const hint = document.getElementById('sheetSaved');
+  const presets = [...new Set([SETTINGS.restDefault, ...REST_PRESETS])].sort((a, b) => a - b);
   hint.innerHTML = `<div class="saved-line">Saved ${value}${m.type === 'time' ? 's' : ' reps'} ✓ — start rest?</div>
-    <div class="rest-presets">${REST_PRESETS.map((s) => `<button class="rest-preset" data-sec="${s}">${s}s</button>`).join('')}</div>`;
+    <div class="rest-presets">${presets.map((s) => `<button class="rest-preset" data-sec="${s}">${s}s</button>`).join('')}</div>`;
   hint.hidden = false;
   hint.querySelectorAll('.rest-preset').forEach((b) => {
     b.onclick = () => { startRest(parseInt(b.dataset.sec, 10)); closeSheet(); };
@@ -565,6 +621,54 @@ function clearData() {
   saveLog(LOG);
   render();
 }
+
+// ---------- Settings ----------
+const settingsSheet = document.getElementById('settingsSheet');
+function openSettings() {
+  document.getElementById('setAutoRest').checked = SETTINGS.autoRest;
+  document.getElementById('restLenInput').value = SETTINGS.restDefault;
+  const row = document.getElementById('restLenRow');
+  row.innerHTML = '';
+  [45, 60, 90, 120, 150].forEach((s) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (s === SETTINGS.restDefault ? ' sel' : '');
+    c.textContent = s + 's';
+    c.onclick = () => {
+      document.getElementById('restLenInput').value = s;
+      row.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
+    };
+    row.appendChild(c);
+  });
+  const unitRow = document.getElementById('unitRow');
+  unitRow.innerHTML = '';
+  ['kg', 'lb'].forEach((u) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (u === SETTINGS.unit ? ' sel' : '');
+    c.textContent = u;
+    c.onclick = () => unitRow.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
+    unitRow.appendChild(c);
+  });
+  settingsSheet.hidden = false;
+}
+function closeSettings() { settingsSheet.hidden = true; }
+document.getElementById('settingsBtn').onclick = openSettings;
+settingsSheet.querySelectorAll('[data-close-settings]').forEach((el) => (el.onclick = closeSettings));
+settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
+  b.onclick = () => {
+    const inp = document.getElementById('restLenInput');
+    inp.value = Math.max(5, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.restadj, 10));
+    document.querySelectorAll('#restLenRow .chip').forEach((x) => x.classList.remove('sel'));
+  };
+});
+document.getElementById('saveSettings').onclick = () => {
+  SETTINGS.autoRest = document.getElementById('setAutoRest').checked;
+  SETTINGS.restDefault = Math.max(5, parseInt(document.getElementById('restLenInput').value, 10) || 90);
+  const selUnit = document.querySelector('#unitRow .chip.sel');
+  if (selUnit) SETTINGS.unit = selUnit.textContent;
+  saveSettings(SETTINGS);
+  render();
+  closeSettings();
+};
 
 // ---------- Tabs ----------
 document.querySelectorAll('.tab').forEach((t) => {
