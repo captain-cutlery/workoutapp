@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v15';
+const APP_VERSION = 'v16';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -943,7 +943,10 @@ function dataButtons() {
   return `<div class="section-title">Your data</div>
     <p class="lede">Stored only on this device. Export regularly as a backup.</p>
     <div class="btn-row">
-      <button id="exportBtn" class="btn-outline">Export</button>
+      <button id="exportBtn" class="btn-outline">Export JSON</button>
+      <button id="exportMdBtn" class="btn-outline">Export Markdown</button>
+    </div>
+    <div class="btn-row">
       <button id="importBtn" class="btn-outline">Restore</button>
       <button id="clearBtn" class="btn-outline danger">Clear</button>
     </div>`;
@@ -951,6 +954,8 @@ function dataButtons() {
 function wireDataButtons() {
   const ex = document.getElementById('exportBtn');
   if (ex) ex.onclick = exportData;
+  const md = document.getElementById('exportMdBtn');
+  if (md) md.onclick = exportMarkdown;
   const im = document.getElementById('importBtn');
   if (im) im.onclick = () => document.getElementById('importFile').click();
   const cl = document.getElementById('clearBtn');
@@ -958,11 +963,59 @@ function wireDataButtons() {
 }
 
 function exportData() {
-  const blob = new Blob([JSON.stringify(LOG, null, 2)], { type: 'application/json' });
+  download(`calisthenics-log-${TODAY}.json`, JSON.stringify(LOG, null, 2), 'application/json');
+}
+
+// Export the log as Obsidian-friendly Markdown: YAML frontmatter for
+// Dataview, then one section per day with a table of sets.
+function exportMarkdown() {
+  if (!LOG.length) { alert('Nothing logged yet to export.'); return; }
+  const days = [...new Set(LOG.map((e) => e.day))].sort().reverse();
+  const totalSets = LOG.length;
+  const totalReps = LOG.reduce((s, e) => { const m = byId(e.movement); return s + (m && m.type === 'reps' ? e.value : 0); }, 0);
+
+  const lines = [];
+  lines.push('---');
+  lines.push('type: workout-log');
+  lines.push(`exported: ${TODAY}`);
+  lines.push(`days_trained: ${days.length}`);
+  lines.push(`total_sets: ${totalSets}`);
+  lines.push(`total_reps: ${totalReps}`);
+  lines.push('tags: [fitness, calisthenics]');
+  lines.push('---');
+  lines.push('');
+  lines.push('# Calisthenics Log');
+  lines.push('');
+
+  for (const day of days) {
+    const items = entriesOn(day).slice().sort((a, b) => a.ts - b.ts);
+    const d = new Date(day + 'T00:00');
+    const pretty = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    lines.push(`## ${day} — ${pretty}`);
+    lines.push('');
+    lines.push('| Movement | Variation | Result | Effort | Note |');
+    lines.push('| --- | --- | --- | --- | --- |');
+    for (const e of items) {
+      const m = byId(e.movement);
+      const name = m ? m.name : e.movement;
+      const unit = m && m.type === 'time' ? 's' : ' reps';
+      let result = `${e.value}${unit}`;
+      if (e.weight) result += ` +${e.weight}${SETTINGS.unit}`;
+      const note = (e.note || '').replace(/\|/g, '\\|');
+      lines.push(`| ${name} | ${e.variation} | ${result} | ${e.rir} | ${note} |`);
+    }
+    lines.push('');
+  }
+
+  download(`calisthenics-log-${TODAY}.md`, lines.join('\n'), 'text/markdown');
+}
+
+function download(filename, text, type) {
+  const blob = new Blob([text], { type });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `calisthenics-log-${TODAY}.json`;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
