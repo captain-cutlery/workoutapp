@@ -73,6 +73,16 @@
       <label class="field-label">Effort — stop a couple reps shy of failure</label>
       <div id="rirRow" class="chip-row"></div>
 
+      <label class="field-label">Added weight (<span id="weightUnitLabel">kg</span>) — optional</label>
+      <div class="stepper">
+        <button class="step-btn" data-wstep="-2.5" aria-label="Less weight">−</button>
+        <input id="weightInput" class="value-input" type="number" inputmode="decimal" value="0" min="0" step="0.5" />
+        <button class="step-btn" data-wstep="2.5" aria-label="More weight">＋</button>
+      </div>
+
+      <label class="field-label">Note — optional</label>
+      <input id="noteInput" class="note-input" type="text" placeholder="How it felt, tweaks, niggles…" />
+
       <div class="sheet-actions">
         <button id="saveSet" class="btn-primary">Save set</button>
         <button id="deleteSet" class="btn-outline danger" hidden>Delete this set</button>
@@ -117,6 +127,9 @@
         <input id="restLenInput" class="value-input" type="number" inputmode="numeric" value="90" min="5" />
         <button class="step-btn" data-restadj="15" aria-label="More">＋</button>
       </div>
+
+      <label class="field-label">Weight unit</label>
+      <div id="unitRow" class="chip-row"></div>
 
       <div class="sheet-actions">
         <button id="saveSettings" class="btn-primary">Save</button>

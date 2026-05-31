@@ -88,6 +88,9 @@ function loadLog() {
 }
 function saveLog(log) { localStorage.setItem(KEY, JSON.stringify(log)); }
 function makeId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
 
 let LOG = loadLog();
 
@@ -102,7 +105,7 @@ function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); 
 let SESSION = loadSession();
 
 const SETTINGS_KEY = 'cal_settings_v1';
-const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90 };
+const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg' };
 function loadSettings() {
   try { return { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}) }; }
   catch { return { ...DEFAULT_SETTINGS }; }
@@ -252,7 +255,7 @@ function movementCard(m, sub, tally, count) {
 function summarize(m, entries) {
   if (!entries.length) return '';
   const unit = m.type === 'time' ? 's' : '';
-  return entries.map((e) => e.value + unit).join(' · ');
+  return entries.map((e) => e.value + unit + (e.weight ? `+${e.weight}` : '')).join(' · ');
 }
 
 function renderEntryList(items) { return `<div class="card">${renderEntryRows(items, true)}</div>`; }
@@ -264,9 +267,11 @@ function renderEntryRows(items, editable) {
       const m = byId(e.movement);
       const unit = m && m.type === 'time' ? 's' : ' reps';
       const tap = editable ? ` data-edit="${e.id}"` : '';
+      const w = e.weight ? ` <span class="wtag">+${e.weight}${SETTINGS.unit}</span>` : '';
+      const note = e.note ? `<div class="e-note">“${escapeHtml(e.note)}”</div>` : '';
       return `<div class="entry${editable ? ' tappable' : ''}"${tap}><div>${m ? m.emoji : ''} ${m ? m.name : e.movement}
-        <div class="e-meta">${e.variation} · ${e.rir}</div></div>
-        <div class="e-val"><b>${e.value}</b>${unit}${editable ? ' <span class="chev">›</span>' : ''}</div></div>`;
+        <div class="e-meta">${e.variation} · ${e.rir}</div>${note}</div>
+        <div class="e-val"><b>${e.value}</b>${unit}${w}${editable ? ' <span class="chev">›</span>' : ''}</div></div>`;
     })
     .join('');
 }
@@ -341,7 +346,7 @@ let sheetState = { mv: null, variation: 0, rir: 1, editId: null };
 
 // Open to log a new set (mvId) OR edit an existing entry (editId).
 function openSheet(mvId, editId) {
-  let m, variation, rir, value;
+  let m, variation, rir, value, weight, note;
   if (editId) {
     const e = LOG.find((x) => x.id === editId);
     if (!e) return;
@@ -349,11 +354,15 @@ function openSheet(mvId, editId) {
     variation = Math.max(0, m.variations.indexOf(e.variation));
     rir = Math.max(0, RIR_OPTIONS.indexOf(e.rir));
     value = e.value;
+    weight = e.weight || 0;
+    note = e.note || '';
   } else {
     m = byId(mvId);
     variation = defaultVariation(m);
     rir = 1;
     value = m.type === 'time' ? 30 : 8;
+    weight = 0;
+    note = '';
   }
   sheetState = { mv: m.id, variation, rir, editId: editId || null };
 
@@ -361,6 +370,9 @@ function openSheet(mvId, editId) {
   document.getElementById('sheetCues').textContent = m.cues;
   document.getElementById('valueLabel').textContent = m.type === 'time' ? 'Seconds' : 'Reps';
   document.getElementById('valueInput').value = value;
+  document.getElementById('weightInput').value = weight;
+  document.getElementById('noteInput').value = note;
+  document.getElementById('weightUnitLabel').textContent = SETTINGS.unit;
   document.getElementById('saveSet').textContent = editId ? 'Save changes' : 'Save set';
   document.getElementById('deleteSet').hidden = !editId;
 
@@ -395,10 +407,17 @@ function renderChips(rowId, items, selected, onPick) {
 function closeSheet() { sheet.hidden = true; }
 sheet.querySelectorAll('[data-close]').forEach((el) => (el.onclick = closeSheet));
 
-document.querySelectorAll('.step-btn').forEach((b) => {
+document.querySelectorAll('[data-step]').forEach((b) => {
   b.onclick = () => {
     const inp = document.getElementById('valueInput');
     inp.value = Math.max(0, (parseInt(inp.value, 10) || 0) + parseInt(b.dataset.step, 10));
+  };
+});
+
+document.querySelectorAll('[data-wstep]').forEach((b) => {
+  b.onclick = () => {
+    const inp = document.getElementById('weightInput');
+    inp.value = Math.max(0, Math.round(((parseFloat(inp.value) || 0) + parseFloat(b.dataset.wstep)) * 10) / 10);
   };
 });
 
@@ -408,17 +427,19 @@ document.getElementById('saveSet').onclick = () => {
   if (!value) return;
   const variation = m.variations[sheetState.variation];
   const rir = RIR_OPTIONS[sheetState.rir];
+  const weight = Math.max(0, parseFloat(document.getElementById('weightInput').value) || 0);
+  const note = document.getElementById('noteInput').value.trim();
 
   if (sheetState.editId) {
     const e = LOG.find((x) => x.id === sheetState.editId);
-    if (e) { e.value = value; e.variation = variation; e.rir = rir; }
+    if (e) { e.value = value; e.variation = variation; e.rir = rir; e.weight = weight; e.note = note; }
     saveLog(LOG);
     render();
     closeSheet();
     return;
   }
 
-  LOG.push({ id: makeId(), ts: Date.now(), day: TODAY, movement: m.id, variation, rir, value });
+  LOG.push({ id: makeId(), ts: Date.now(), day: TODAY, movement: m.id, variation, rir, value, weight, note });
   saveLog(LOG);
   render();
 
@@ -618,6 +639,15 @@ function openSettings() {
     };
     row.appendChild(c);
   });
+  const unitRow = document.getElementById('unitRow');
+  unitRow.innerHTML = '';
+  ['kg', 'lb'].forEach((u) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (u === SETTINGS.unit ? ' sel' : '');
+    c.textContent = u;
+    c.onclick = () => unitRow.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
+    unitRow.appendChild(c);
+  });
   settingsSheet.hidden = false;
 }
 function closeSettings() { settingsSheet.hidden = true; }
@@ -633,7 +663,10 @@ settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
 document.getElementById('saveSettings').onclick = () => {
   SETTINGS.autoRest = document.getElementById('setAutoRest').checked;
   SETTINGS.restDefault = Math.max(5, parseInt(document.getElementById('restLenInput').value, 10) || 90);
+  const selUnit = document.querySelector('#unitRow .chip.sel');
+  if (selUnit) SETTINGS.unit = selUnit.textContent;
   saveSettings(SETTINGS);
+  render();
   closeSettings();
 };
 
