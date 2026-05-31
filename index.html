@@ -20,6 +20,18 @@
 
   <main id="view" class="view"></main>
 
+  <!-- Persistent rest timer banner (survives tab switches) -->
+  <div id="restBar" class="rest-bar" hidden>
+    <button class="rest-adj" data-rest="-15">−15</button>
+    <div class="rest-mid">
+      <div id="restTime" class="rest-time">1:30</div>
+      <div class="rest-label">Rest</div>
+    </div>
+    <button class="rest-adj" data-rest="15">+15</button>
+    <button id="restToggle" class="rest-adj" aria-label="Pause">⏸</button>
+    <button id="restSkip" class="rest-skip" aria-label="Skip">✕</button>
+  </div>
+
   <nav class="tabbar" role="tablist">
     <button class="tab is-active" data-tab="today" role="tab">
       <span class="tab-ico">☀</span><span>Today</span>
@@ -27,12 +39,15 @@
     <button class="tab" data-tab="log" role="tab">
       <span class="tab-ico">＋</span><span>Log</span>
     </button>
+    <button class="tab" data-tab="stats" role="tab">
+      <span class="tab-ico">📈</span><span>Stats</span>
+    </button>
     <button class="tab" data-tab="history" role="tab">
       <span class="tab-ico">≡</span><span>History</span>
     </button>
   </nav>
 
-  <!-- Logging sheet -->
+  <!-- Logging / edit sheet -->
   <div id="sheet" class="sheet" hidden>
     <div class="sheet-backdrop" data-close></div>
     <div class="sheet-card" role="dialog" aria-modal="true">
@@ -57,11 +72,30 @@
 
       <div class="sheet-actions">
         <button id="saveSet" class="btn-primary">Save set</button>
+        <button id="deleteSet" class="btn-outline danger" hidden>Delete this set</button>
         <button class="btn-ghost" data-close>Cancel</button>
       </div>
-      <p id="sheetSaved" class="saved-hint" hidden></p>
+      <div id="sheetSaved" class="saved-hint" hidden></div>
     </div>
   </div>
+
+  <!-- Custom session editor sheet -->
+  <div id="sessionSheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close-session></div>
+    <div class="sheet-card" role="dialog" aria-modal="true">
+      <div class="sheet-grip"></div>
+      <h2>Edit Today's session</h2>
+      <p class="cues">Pick the movements that appear under Today and set your own targets.</p>
+      <div id="sessionEditor"></div>
+      <div class="sheet-actions">
+        <button id="saveSession" class="btn-primary">Save session</button>
+        <button id="resetSession" class="btn-ghost">Reset to default</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for restoring a backup -->
+  <input id="importFile" type="file" accept="application/json,.json" hidden />
 
   <script src="app.js"></script>
   <script>

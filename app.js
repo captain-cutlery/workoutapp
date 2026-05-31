@@ -41,8 +41,8 @@ const MOVEMENTS = [
 
 const byId = (id) => MOVEMENTS.find((m) => m.id === id);
 
-// Suggested full-body session (KBoges leans full-body, frequent, low-fuss).
-const SESSION = [
+// Default suggested full-body session (KBoges leans full-body, frequent, low-fuss).
+const DEFAULT_SESSION = [
   { id: 'pushup', target: '2–3 sets · RIR 1–2' },
   { id: 'pullup', target: '2–3 sets · RIR 1–2' },
   { id: 'squat',  target: '2–3 sets · RIR 1–2' },
@@ -50,15 +50,36 @@ const SESSION = [
 ];
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
+const REST_PRESETS = [60, 90, 120];
 
 // ---------- Storage ----------
 const KEY = 'cal_log_v1';
+const SESSION_KEY = 'cal_session_v1';
+
 function loadLog() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || []; }
-  catch { return []; }
+  let log;
+  try { log = JSON.parse(localStorage.getItem(KEY)) || []; }
+  catch { log = []; }
+  // Backfill ids on older entries so edit/delete can target them.
+  let changed = false;
+  for (const e of log) if (!e.id) { e.id = makeId(); changed = true; }
+  if (changed) localStorage.setItem(KEY, JSON.stringify(log));
+  return log;
 }
 function saveLog(log) { localStorage.setItem(KEY, JSON.stringify(log)); }
+function makeId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
 let LOG = loadLog();
+
+function loadSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
+    if (Array.isArray(s) && s.length) return s;
+  } catch {}
+  return DEFAULT_SESSION.map((s) => ({ ...s }));
+}
+function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); }
+let SESSION = loadSession();
 
 // ---------- Date helpers ----------
 const dayKey = (d) => {
@@ -78,6 +99,7 @@ function render() {
   renderWeekStrip();
   if (activeTab === 'today') renderToday();
   else if (activeTab === 'log') renderLog();
+  else if (activeTab === 'stats') renderStats();
   else renderHistory();
 }
 
@@ -104,20 +126,21 @@ function renderToday() {
   topTitle.textContent = 'Today';
   const today = entriesOn(TODAY);
   let html = `<p class="lede">A short full-body session. Move with control, stop a couple reps shy of failure.</p>`;
-  html += `<div class="section-title">Suggested session</div>`;
+  html += `<div class="section-row"><div class="section-title">Suggested session</div><button id="editSession" class="link-btn">Edit</button></div>`;
   for (const s of SESSION) {
     const m = byId(s.id);
+    if (!m) continue;
     const done = today.filter((e) => e.movement === s.id);
-    const tally = summarize(m, done);
-    html += movementCard(m, s.target, tally, done.length);
+    html += movementCard(m, s.target, summarize(m, done), done.length);
   }
-  const total = today.length;
   html += `<div class="section-title">Today's log</div>`;
-  html += total
+  html += today.length
     ? renderEntryList(today)
     : `<p class="lede">Nothing logged yet. Tap a movement above to start.</p>`;
   view.innerHTML = html;
   wireCards();
+  wireEntries();
+  document.getElementById('editSession').onclick = openSessionEditor;
 }
 
 function renderLog() {
@@ -136,23 +159,53 @@ function renderLog() {
 function renderHistory() {
   topTitle.textContent = 'History';
   if (!LOG.length) {
-    view.innerHTML = `<div class="empty"><div class="big">🌱</div>No workouts logged yet.<br>Consistency is the whole game — start today.</div>`;
+    view.innerHTML = `<div class="empty"><div class="big">🌱</div>No workouts logged yet.<br>Consistency is the whole game — start today.</div>`
+      + dataButtons();
+    wireDataButtons();
     return;
   }
   const keys = [...new Set(LOG.map((e) => e.day))].sort().reverse();
-  let html = `<div class="card"><b>${LOG.length}</b> sets logged across <b>${keys.length}</b> days.</div>`;
+  let html = `<p class="lede">Tap any set to edit or delete it.</p>`;
   for (const key of keys) {
     const items = entriesOn(key);
     const d = new Date(key + 'T00:00');
     const label = d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-    html += `<div class="day-group"><div class="day-head"><h3>${label}${key === TODAY ? ' · Today' : ''}</h3><span>${items.length} sets</span></div><div class="card">${renderEntryRows(items)}</div></div>`;
+    html += `<div class="day-group"><div class="day-head"><h3>${label}${key === TODAY ? ' · Today' : ''}</h3><span>${items.length} sets</span></div><div class="card">${renderEntryRows(items, true)}</div></div>`;
   }
-  html += `<div class="section-title">Data</div><div class="btn-row">
-    <button id="exportBtn" class="btn-outline">Export JSON</button>
-    <button id="clearBtn" class="btn-outline danger">Clear all</button></div>`;
+  html += dataButtons();
   view.innerHTML = html;
-  document.getElementById('exportBtn').onclick = exportData;
-  document.getElementById('clearBtn').onclick = clearData;
+  wireEntries();
+  wireDataButtons();
+}
+
+function renderStats() {
+  topTitle.textContent = 'Stats';
+  if (!LOG.length) {
+    view.innerHTML = `<div class="empty"><div class="big">📈</div>Log a few sessions and your progress shows up here.</div>`;
+    return;
+  }
+  const s = computeStats();
+  let html = `<div class="stat-grid">
+    <div class="stat"><b>${s.streak}</b><span>day streak</span></div>
+    <div class="stat"><b>${s.daysTrained}</b><span>days trained</span></div>
+    <div class="stat"><b>${s.totalSets}</b><span>total sets</span></div>
+    <div class="stat"><b>${s.weekSets}</b><span>sets this week</span></div>
+  </div>`;
+
+  html += `<div class="section-title">Progress</div>`;
+  for (const m of MOVEMENTS) {
+    const series = bestPerDay(m.id);
+    if (!series.length) continue;
+    const pb = Math.max(...series.map((p) => p.v));
+    const unit = m.type === 'time' ? 's' : '';
+    html += `<div class="card">
+      <div class="chart-head"><div class="mv-name">${m.emoji} ${m.name}</div>
+      <div class="mv-tally">PB <b>${pb}${unit}</b></div></div>
+      ${sparkline(series, m.type)}
+      <div class="chart-foot">${series.length} day${series.length > 1 ? 's' : ''} · best set per day</div>
+    </div>`;
+  }
+  view.innerHTML = html;
 }
 
 // ---------- Card / entry markup ----------
@@ -170,21 +223,21 @@ function movementCard(m, sub, tally, count) {
 function summarize(m, entries) {
   if (!entries.length) return '';
   const unit = m.type === 'time' ? 's' : '';
-  const vals = entries.map((e) => e.value + unit).join(' · ');
-  return vals;
+  return entries.map((e) => e.value + unit).join(' · ');
 }
 
-function renderEntryList(items) { return `<div class="card">${renderEntryRows(items)}</div>`; }
-function renderEntryRows(items) {
+function renderEntryList(items) { return `<div class="card">${renderEntryRows(items, true)}</div>`; }
+function renderEntryRows(items, editable) {
   return items
     .slice()
     .sort((a, b) => b.ts - a.ts)
     .map((e) => {
       const m = byId(e.movement);
       const unit = m && m.type === 'time' ? 's' : ' reps';
-      return `<div class="entry"><div>${m ? m.emoji : ''} ${m ? m.name : e.movement}
+      const tap = editable ? ` data-edit="${e.id}"` : '';
+      return `<div class="entry${editable ? ' tappable' : ''}"${tap}><div>${m ? m.emoji : ''} ${m ? m.name : e.movement}
         <div class="e-meta">${e.variation} · ${e.rir}</div></div>
-        <div><b>${e.value}</b>${unit}</div></div>`;
+        <div class="e-val"><b>${e.value}</b>${unit}${editable ? ' <span class="chev">›</span>' : ''}</div></div>`;
     })
     .join('');
 }
@@ -194,21 +247,96 @@ function wireCards() {
     el.onclick = () => openSheet(el.dataset.mv);
   });
 }
+function wireEntries() {
+  view.querySelectorAll('[data-edit]').forEach((el) => {
+    el.onclick = () => openSheet(null, el.dataset.edit);
+  });
+}
 
-// ---------- Logging sheet ----------
+// ---------- Stats helpers ----------
+function computeStats() {
+  const days = [...new Set(LOG.map((e) => e.day))].sort();
+  // current streak: consecutive days up to today (or yesterday) with entries
+  const set = new Set(days);
+  let streak = 0;
+  const cur = new Date();
+  if (!set.has(dayKey(cur))) cur.setDate(cur.getDate() - 1); // allow streak to count through yesterday
+  while (set.has(dayKey(cur))) { streak++; cur.setDate(cur.getDate() - 1); }
+
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  const weekSets = LOG.filter((e) => new Date(e.day + 'T00:00') >= weekStart).length;
+
+  return { streak, daysTrained: days.length, totalSets: LOG.length, weekSets };
+}
+
+// Best (max value) set per day for a movement, oldest -> newest.
+function bestPerDay(mvId) {
+  const map = {};
+  for (const e of LOG) {
+    if (e.movement !== mvId) continue;
+    map[e.day] = Math.max(map[e.day] || 0, e.value);
+  }
+  return Object.keys(map).sort().map((day) => ({ day, v: map[day] }));
+}
+
+// Tiny inline SVG line chart. Last ~12 points.
+function sparkline(series, type) {
+  const pts = series.slice(-12);
+  const W = 300, H = 70, P = 6;
+  const max = Math.max(...pts.map((p) => p.v));
+  const min = Math.min(...pts.map((p) => p.v));
+  const span = max - min || 1;
+  const stepX = pts.length > 1 ? (W - P * 2) / (pts.length - 1) : 0;
+  const xy = (p, i) => {
+    const x = P + i * stepX;
+    const y = H - P - ((p.v - min) / span) * (H - P * 2);
+    return [x, y];
+  };
+  const line = pts.map((p, i) => xy(p, i).join(',')).join(' ');
+  const dots = pts.map((p, i) => { const [x, y] = xy(p, i); return `<circle cx="${x}" cy="${y}" r="2.6"/>`; }).join('');
+  const [lx, ly] = xy(pts[pts.length - 1], pts.length - 1);
+  const unit = type === 'time' ? 's' : '';
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">
+    <polyline class="spark-line" points="${line}" />
+    <g class="spark-dots">${dots}</g>
+    <text x="${Math.min(lx, W - 22)}" y="${Math.max(ly - 6, 12)}" class="spark-val">${pts[pts.length - 1].v}${unit}</text>
+  </svg>`;
+}
+
+// ---------- Logging / edit sheet ----------
 const sheet = document.getElementById('sheet');
-let sheetState = { mv: null, variation: 0, rir: 1 };
+let sheetState = { mv: null, variation: 0, rir: 1, editId: null };
 
-function openSheet(mvId) {
-  const m = byId(mvId);
-  sheetState = { mv: mvId, variation: defaultVariation(m), rir: 1 };
-  document.getElementById('sheetTitle').textContent = m.name;
+// Open to log a new set (mvId) OR edit an existing entry (editId).
+function openSheet(mvId, editId) {
+  let m, variation, rir, value;
+  if (editId) {
+    const e = LOG.find((x) => x.id === editId);
+    if (!e) return;
+    m = byId(e.movement);
+    variation = Math.max(0, m.variations.indexOf(e.variation));
+    rir = Math.max(0, RIR_OPTIONS.indexOf(e.rir));
+    value = e.value;
+  } else {
+    m = byId(mvId);
+    variation = defaultVariation(m);
+    rir = 1;
+    value = m.type === 'time' ? 30 : 8;
+  }
+  sheetState = { mv: m.id, variation, rir, editId: editId || null };
+
+  document.getElementById('sheetTitle').textContent = (editId ? 'Edit · ' : '') + m.name;
   document.getElementById('sheetCues').textContent = m.cues;
   document.getElementById('valueLabel').textContent = m.type === 'time' ? 'Seconds' : 'Reps';
-  document.getElementById('valueInput').value = m.type === 'time' ? 30 : 8;
+  document.getElementById('valueInput').value = value;
+  document.getElementById('saveSet').textContent = editId ? 'Save changes' : 'Save set';
+  document.getElementById('deleteSet').hidden = !editId;
 
-  renderChips('variationRow', m.variations, sheetState.variation, (i) => { sheetState.variation = i; });
-  renderChips('rirRow', RIR_OPTIONS, sheetState.rir, (i) => { sheetState.rir = i; });
+  renderChips('variationRow', m.variations, variation, (i) => { sheetState.variation = i; });
+  renderChips('rirRow', RIR_OPTIONS, rir, (i) => { sheetState.rir = i; });
   document.getElementById('sheetSaved').hidden = true;
   sheet.hidden = false;
 }
@@ -249,22 +377,155 @@ document.getElementById('saveSet').onclick = () => {
   const m = byId(sheetState.mv);
   const value = Math.max(0, parseInt(document.getElementById('valueInput').value, 10) || 0);
   if (!value) return;
-  LOG.push({
-    ts: Date.now(),
-    day: TODAY,
-    movement: m.id,
-    variation: m.variations[sheetState.variation],
-    rir: RIR_OPTIONS[sheetState.rir],
-    value,
-  });
+  const variation = m.variations[sheetState.variation];
+  const rir = RIR_OPTIONS[sheetState.rir];
+
+  if (sheetState.editId) {
+    const e = LOG.find((x) => x.id === sheetState.editId);
+    if (e) { e.value = value; e.variation = variation; e.rir = rir; }
+    saveLog(LOG);
+    render();
+    closeSheet();
+    return;
+  }
+
+  LOG.push({ id: makeId(), ts: Date.now(), day: TODAY, movement: m.id, variation, rir, value });
   saveLog(LOG);
+  render();
+
+  // Offer a rest timer right after logging.
   const hint = document.getElementById('sheetSaved');
-  hint.textContent = `Saved ${value}${m.type === 'time' ? 's' : ' reps'} · log another or close`;
+  hint.innerHTML = `<div class="saved-line">Saved ${value}${m.type === 'time' ? 's' : ' reps'} ✓ — start rest?</div>
+    <div class="rest-presets">${REST_PRESETS.map((s) => `<button class="rest-preset" data-sec="${s}">${s}s</button>`).join('')}</div>`;
   hint.hidden = false;
+  hint.querySelectorAll('.rest-preset').forEach((b) => {
+    b.onclick = () => { startRest(parseInt(b.dataset.sec, 10)); closeSheet(); };
+  });
+};
+
+document.getElementById('deleteSet').onclick = () => {
+  if (!sheetState.editId) return;
+  if (!confirm('Delete this set?')) return;
+  LOG = LOG.filter((x) => x.id !== sheetState.editId);
+  saveLog(LOG);
+  render();
+  closeSheet();
+};
+
+// ---------- Rest timer (persistent banner) ----------
+const restBar = document.getElementById('restBar');
+const restTimeEl = document.getElementById('restTime');
+const restToggle = document.getElementById('restToggle');
+let rest = { remaining: 0, running: false, intId: null };
+
+function fmt(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function paintRest() {
+  restTimeEl.textContent = fmt(Math.max(0, rest.remaining));
+  restToggle.textContent = rest.running ? '⏸' : '▶';
+}
+function startRest(sec) {
+  rest.remaining = sec;
+  rest.running = true;
+  restBar.hidden = false;
+  paintRest();
+  clearInterval(rest.intId);
+  rest.intId = setInterval(tickRest, 1000);
+}
+function tickRest() {
+  if (!rest.running) return;
+  rest.remaining--;
+  paintRest();
+  if (rest.remaining <= 0) finishRest();
+}
+function finishRest() {
+  clearInterval(rest.intId);
+  rest.running = false;
+  buzz();
+  restBar.classList.add('done');
+  restTimeEl.textContent = 'Go!';
+  setTimeout(() => { restBar.hidden = true; restBar.classList.remove('done'); }, 2500);
+}
+function buzz() {
+  if (navigator.vibrate) navigator.vibrate([180, 80, 180]);
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; g.gain.value = 0.06;
+    o.start(); o.stop(ctx.currentTime + 0.18);
+  } catch {}
+}
+restToggle.onclick = () => {
+  if (rest.remaining <= 0) return;
+  rest.running = !rest.running;
+  paintRest();
+};
+document.getElementById('restSkip').onclick = () => {
+  clearInterval(rest.intId); rest.running = false; restBar.hidden = true;
+};
+restBar.querySelectorAll('[data-rest]').forEach((b) => {
+  b.onclick = () => { rest.remaining = Math.max(0, rest.remaining + parseInt(b.dataset.rest, 10)); paintRest(); };
+});
+
+// ---------- Custom session editor ----------
+const sessionSheet = document.getElementById('sessionSheet');
+function openSessionEditor() {
+  const editor = document.getElementById('sessionEditor');
+  editor.innerHTML = MOVEMENTS.map((m) => {
+    const inSession = SESSION.find((s) => s.id === m.id);
+    const target = inSession ? inSession.target : '2–3 sets · RIR 1–2';
+    return `<div class="sess-row">
+      <label class="sess-pick"><input type="checkbox" data-sid="${m.id}" ${inSession ? 'checked' : ''} />
+        <span>${m.emoji} ${m.name}</span></label>
+      <input class="sess-target" data-tid="${m.id}" value="${target.replace(/"/g, '&quot;')}" placeholder="Target" />
+    </div>`;
+  }).join('');
+  sessionSheet.hidden = false;
+}
+function closeSessionEditor() { sessionSheet.hidden = true; }
+sessionSheet.querySelectorAll('[data-close-session]').forEach((el) => (el.onclick = closeSessionEditor));
+
+document.getElementById('saveSession').onclick = () => {
+  const next = [];
+  // Preserve movement order from MOVEMENTS.
+  for (const m of MOVEMENTS) {
+    const cb = sessionSheet.querySelector(`[data-sid="${m.id}"]`);
+    if (cb && cb.checked) {
+      const t = sessionSheet.querySelector(`[data-tid="${m.id}"]`).value.trim();
+      next.push({ id: m.id, target: t || '2–3 sets' });
+    }
+  }
+  SESSION = next.length ? next : DEFAULT_SESSION.map((s) => ({ ...s }));
+  saveSession(SESSION);
+  closeSessionEditor();
+  render();
+};
+document.getElementById('resetSession').onclick = () => {
+  SESSION = DEFAULT_SESSION.map((s) => ({ ...s }));
+  saveSession(SESSION);
+  closeSessionEditor();
   render();
 };
 
-// ---------- Data export / clear ----------
+// ---------- Data export / import / clear ----------
+function dataButtons() {
+  return `<div class="section-title">Your data</div>
+    <p class="lede">Stored only on this device. Export regularly as a backup.</p>
+    <div class="btn-row">
+      <button id="exportBtn" class="btn-outline">Export</button>
+      <button id="importBtn" class="btn-outline">Restore</button>
+      <button id="clearBtn" class="btn-outline danger">Clear</button>
+    </div>`;
+}
+function wireDataButtons() {
+  const ex = document.getElementById('exportBtn');
+  if (ex) ex.onclick = exportData;
+  const im = document.getElementById('importBtn');
+  if (im) im.onclick = () => document.getElementById('importFile').click();
+  const cl = document.getElementById('clearBtn');
+  if (cl) cl.onclick = clearData;
+}
+
 function exportData() {
   const blob = new Blob([JSON.stringify(LOG, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
@@ -274,8 +535,32 @@ function exportData() {
   a.click();
   URL.revokeObjectURL(url);
 }
+
+document.getElementById('importFile').onchange = (ev) => {
+  const file = ev.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch { alert('That file is not valid JSON.'); return; }
+    if (!Array.isArray(data) || !data.every((e) => e && e.movement && e.day && 'value' in e)) {
+      alert('That does not look like a Calisthenics Log backup.');
+      return;
+    }
+    const ok = confirm(`Restore ${data.length} sets? This replaces your current ${LOG.length} sets on this device.`);
+    if (!ok) return;
+    LOG = data.map((e) => ({ ...e, id: e.id || makeId() }));
+    saveLog(LOG);
+    render();
+    alert('Backup restored.');
+  };
+  reader.readAsText(file);
+  ev.target.value = ''; // allow re-importing the same file later
+};
+
 function clearData() {
-  if (!confirm('Delete all logged workouts? This cannot be undone.')) return;
+  if (!confirm('Delete all logged workouts? Export a backup first if unsure. This cannot be undone.')) return;
   LOG = [];
   saveLog(LOG);
   render();
