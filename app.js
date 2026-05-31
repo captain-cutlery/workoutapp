@@ -5,63 +5,70 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v10';
+const APP_VERSION = 'v11';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
 // type: 'reps' for rep-counted work, 'time' for holds (seconds).
-// Variations run easiest -> hardest so progression is obvious.
+// Variations run easiest -> hardest so progression is obvious. The ladders draw
+// on the r/bodyweightfitness Recommended Routine. `range` is the working target:
+// when you can hit the top of the range with good form, advance to the next rung.
 const MOVEMENTS = [
   {
-    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps',
+    id: 'pushup', name: 'Push-ups', emoji: '🤜', group: 'Push', type: 'reps', range: [8, 12],
     cues: 'Body in one line, brace your core. Chest to the floor, elbows ~45°. Lower slowly, press all the way up.',
-    variations: ['Incline', 'Knee', 'Standard', 'Diamond', 'Decline', 'Archer'],
+    variations: ['Wall', 'Incline', 'Knee', 'Standard', 'Diamond', 'Pseudo-planche', 'Archer', 'One-arm progression'],
   },
   {
-    id: 'dips', name: 'Dips', emoji: '🪑', group: 'Push', type: 'reps',
+    id: 'dips', name: 'Dips', emoji: '🪑', group: 'Push', type: 'reps', range: [5, 8],
     cues: 'Shoulders down and back. Lower under control until upper arms are parallel, then lock out at the top.',
-    variations: ['Bench / chair', 'Parallel bar', 'Ring'],
+    variations: ['Support hold (s)', 'Negative', 'Bench / chair', 'Parallel bar', 'Ring', 'Ring (turned out)'],
   },
   {
-    id: 'pullup', name: 'Pull-ups', emoji: '🆙', group: 'Pull', type: 'reps',
+    id: 'pullup', name: 'Pull-ups', emoji: '🆙', group: 'Pull', type: 'reps', range: [5, 8],
     cues: 'Start from a full dead hang. Pull chin over the bar, no kipping. Lower slowly and fully each rep.',
-    variations: ['Dead hang (s)', 'Negative', 'Band-assisted', 'Standard', 'Wide', 'Archer'],
+    variations: ['Dead hang (s)', 'Scapular pulls', 'Negative', 'Band-assisted', 'Standard', 'Wide', 'Archer', 'One-arm progression'],
   },
   {
-    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps',
+    id: 'row', name: 'Rows', emoji: '🚣', group: 'Pull', type: 'reps', range: [8, 12],
     cues: 'Body straight and rigid. Squeeze shoulder blades, pull chest to the bar, control the way down.',
-    variations: ['Incline (feet back)', 'Horizontal', 'Feet elevated'],
+    variations: ['Vertical', 'Incline (feet back)', 'Horizontal', 'Feet elevated', 'Wide', 'Tuck front-lever row'],
   },
   {
-    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps',
+    id: 'squat', name: 'Squats', emoji: '🦵', group: 'Legs', type: 'reps', range: [8, 12],
     cues: 'Full depth — hips below knees. Knees track over toes, chest up, heels planted. Stand tall to finish.',
-    variations: ['Box / assisted', 'Bodyweight', 'Tempo (3s down)', 'Split squat', 'Pistol progression'],
+    variations: ['Box / assisted', 'Bodyweight', 'Tempo (3s down)', 'Split squat', 'Bulgarian split squat', 'Beginner shrimp', 'Pistol progression'],
   },
   {
-    id: 'calf', name: 'Calf raises', emoji: '🦶', group: 'Legs', type: 'reps',
+    id: 'calf', name: 'Calf raises', emoji: '🦶', group: 'Legs', type: 'reps', range: [8, 12],
     cues: 'Full range — stretch at the bottom, rise high onto the toes and pause at the top. Slow and controlled, no bouncing.',
     variations: ['Two-leg', 'Single-leg', 'Deficit (off a step)', 'Single-leg deficit'],
   },
   {
-    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps',
+    id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [8, 12],
     cues: 'Drive through the heels and squeeze the glutes hard at the top, ribs down. Hinge from the hips with a neutral spine — never round the back.',
-    variations: ['Glute bridge', 'Single-leg bridge', 'Hip thrust', 'Good morning', 'Nordic (assisted)', 'Nordic curl'],
+    variations: ['Glute bridge', 'Single-leg bridge', 'Hip thrust', 'Good morning', 'Banded leg curl', 'Nordic (assisted)', 'Nordic curl'],
   },
   {
-    id: 'core', name: 'Core hold', emoji: '🧱', group: 'Core', type: 'time',
+    id: 'core', name: 'Core hold', emoji: '🧱', group: 'Core', type: 'time', range: [30, 60],
     cues: 'Brace abs hard, ribs down, neutral spine. No sagging hips. Quality tension beats long sloppy holds.',
-    variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Hollow rocks'],
+    variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Hollow rocks', 'Ab-wheel from knees', 'Standing ab-wheel'],
   },
   {
-    id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps',
+    id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
     cues: 'Move slowly with no swinging. Posteriorly tilt the pelvis so the lower back stays flat, and control the way down.',
     variations: ['Lying knee raises', 'Lying leg raises', 'Hanging knee raises', 'Hanging leg raises', 'Toes-to-bar'],
   },
   {
-    id: 'lsit', name: 'L-sit', emoji: '📐', group: 'Core', type: 'time',
+    id: 'lsit', name: 'L-sit', emoji: '📐', group: 'Core', type: 'time', range: [10, 30],
     cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds.',
     variations: ['Foot-supported (s)', 'Tuck hold (s)', 'One-leg (s)', 'Full L-sit (s)'],
+  },
+  {
+    id: 'handstand', name: 'Handstand', emoji: '🤸', group: 'Skill', type: 'time', range: [30, 60],
+    cues: 'Practise while fresh. Hands shoulder-width, push tall through the shoulders, squeeze glutes and point toes. Stack hips over hands.',
+    variations: ['Plank → pike (s)', 'Wall plank (feet low) (s)', 'Wall handstand chest-in (s)', 'Wall handstand back-to-wall (s)', 'Freestanding kick-up (s)'],
   },
   {
     id: 'bike', name: 'Bike HIIT', emoji: '🚴', group: 'Cardio', type: 'time', hiit: true,
@@ -516,6 +523,24 @@ function openSheet(mvId, editId) {
     lt.hidden = true;
   }
 
+  // Target range + progression nudge (Recommended-Routine style): show the
+  // working range, and suggest advancing a rung once you top it on this variation.
+  const ph = document.getElementById('progressHint');
+  if (!editId && !isBike && m.range) {
+    const unit = m.type === 'time' ? 's' : ' reps';
+    const [lo, hi] = m.range;
+    let txt = `<span class="ph-label">Target ${lo}–${hi}${unit}</span> at a hard but clean effort (RIR 1–2). Hit the top with good form, then move up a rung.`;
+    if (readyToAdvance(m)) {
+      const cur = m.variations[variation];
+      const next = m.variations[Math.min(variation + 1, m.variations.length - 1)];
+      if (next !== cur) txt = `<span class="ph-label ph-go">Ready to progress 🎉</span> You're topping ${hi}${unit} on <b>${cur}</b> — try <b>${next}</b> next.`;
+    }
+    ph.innerHTML = txt;
+    ph.hidden = false;
+  } else {
+    ph.hidden = true;
+  }
+
   renderChips('variationRow', m.variations, variation, (i) => { sheetState.variation = i; });
   renderChips('rirRow', RIR_OPTIONS, rir, (i) => { sheetState.rir = i; });
   document.getElementById('sheetSaved').hidden = true;
@@ -527,6 +552,16 @@ function defaultVariation(m) {
   const last = lastSet(m.id);
   const idx = last ? m.variations.indexOf(last.variation) : -1;
   return idx >= 0 ? idx : 0;
+}
+
+// Ready to advance when the two most recent sets on the current variation both
+// reached the top of the target range (RR-style: top the range with good form).
+function readyToAdvance(m) {
+  if (!m.range) return false;
+  const cur = m.variations[defaultVariation(m)];
+  const recent = LOG.filter((e) => e.movement === m.id && e.variation === cur)
+    .sort((a, b) => b.ts - a.ts).slice(0, 2);
+  return recent.length >= 2 && recent.every((e) => e.value >= m.range[1]);
 }
 
 // Most recent logged set for a movement (by timestamp). null if none.
