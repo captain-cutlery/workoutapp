@@ -71,6 +71,12 @@ body {
 .time-input { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
 .time-input:focus { outline: none; border-color: var(--accent); }
 
+/* App version / update */
+.version-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.version-text { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+.version-row .btn-outline { flex: 0 0 auto; width: auto; }
+.update-status { color: var(--accent); font-size: 13px; margin: 8px 0 0; }
+
 .week-strip { display: flex; gap: 6px; margin-top: 12px; }
 .week-day {
   flex: 1; text-align: center; font-size: 11px; color: var(--muted);
@@ -82,7 +88,7 @@ body {
 .week-day.today { outline: 2px solid var(--accent); }
 
 /* View */
-.view { padding: 4px 16px 24px; }
+.view { padding: 4px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px); }
 .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 22px 4px 10px; }
 .lede { color: var(--muted); margin: 2px 4px 4px; font-size: 14px; }
 

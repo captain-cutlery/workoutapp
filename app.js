@@ -3,6 +3,10 @@
 
 'use strict';
 
+// Bump this with each release; surfaced in Settings so you can confirm the
+// installed app matches the latest deploy. Keep in step with the sw.js cache.
+const APP_VERSION = 'v9';
+
 // ---------- Movement library ----------
 // type: 'reps' for rep-counted work, 'time' for holds (seconds).
 // Variations run easiest -> hardest so progression is obvious.
@@ -891,7 +895,34 @@ function openSettings() {
     remRow.appendChild(c);
   });
   document.getElementById('remTime').value = SETTINGS.remTime;
+  document.getElementById('appVersion').textContent = APP_VERSION;
+  document.getElementById('updateStatus').hidden = true;
   settingsSheet.hidden = false;
+}
+
+// Manual escape hatch: ask the service worker to re-check the network for a
+// newer version. If one is found it installs and the page reloads itself.
+function checkForUpdate() {
+  const status = document.getElementById('updateStatus');
+  status.hidden = false;
+  status.textContent = 'Checking…';
+  const reg = window.__swReg;
+  if (!reg) {
+    // No service worker (e.g. opened over plain http) — just hard-reload.
+    status.textContent = 'Reloading…';
+    setTimeout(() => location.reload(), 400);
+    return;
+  }
+  reg.update().then(() => {
+    const waiting = reg.installing || reg.waiting;
+    if (waiting) {
+      status.textContent = 'Update found — applying…';
+      // controllerchange (registered in index.html) reloads once it activates.
+      if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    } else {
+      status.textContent = `You're up to date (${APP_VERSION}).`;
+    }
+  }).catch(() => { status.textContent = 'Could not check — are you online?'; });
 }
 
 // Build a recurring .ics reminder for the chosen days/time and download it.
@@ -945,6 +976,7 @@ function addReminderToCalendar() {
 function closeSettings() { settingsSheet.hidden = true; }
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('addReminder').onclick = addReminderToCalendar;
+document.getElementById('checkUpdate').onclick = checkForUpdate;
 settingsSheet.querySelectorAll('[data-close-settings]').forEach((el) => (el.onclick = closeSettings));
 settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
   b.onclick = () => {

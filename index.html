@@ -187,6 +187,13 @@
       </div>
       <button id="addReminder" class="btn-outline" style="margin-top:12px">📅 Add reminder to calendar</button>
 
+      <label class="field-label">App version</label>
+      <div class="version-row">
+        <span id="appVersion" class="version-text">v—</span>
+        <button id="checkUpdate" class="btn-outline">Check for update</button>
+      </div>
+      <p id="updateStatus" class="update-status" hidden></p>
+
       <div class="sheet-actions">
         <button id="saveSettings" class="btn-primary">Save</button>
         <button class="btn-ghost" data-close-settings>Close</button>
@@ -202,6 +209,8 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('sw.js').then((reg) => {
+          // Expose so the in-app "Check for update" button can force a check.
+          window.__swReg = reg;
           // Pull updates on each launch; reload once a new worker takes control.
           reg.update();
           let refreshing = false;
