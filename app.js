@@ -105,7 +105,9 @@ function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); 
 let SESSION = loadSession();
 
 const SETTINGS_KEY = 'cal_settings_v1';
-const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg' };
+const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg', remDays: [1, 3, 5], remTime: '18:00' };
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const ICAL_DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 function loadSettings() {
   try { return { ...DEFAULT_SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}) }; }
   catch { return { ...DEFAULT_SETTINGS }; }
@@ -230,11 +232,19 @@ function renderStats() {
     if (!series.length) continue;
     const pb = Math.max(...series.map((p) => p.v));
     const unit = m.type === 'time' ? 's' : '';
+    let weightBlock = '';
+    if (hasWeight(m.id)) {
+      const wSeries = bestPerDay(m.id, 'weight');
+      const wPb = Math.max(...wSeries.map((p) => p.v));
+      weightBlock = `<div class="chart-sub">🏆 Added weight · PB ${wPb}${SETTINGS.unit}</div>
+        ${sparkline(wSeries, 'weight', SETTINGS.unit)}`;
+    }
     html += `<div class="card">
       <div class="chart-head"><div class="mv-name">${m.emoji} ${m.name}</div>
       <div class="mv-tally">PB <b>${pb}${unit}</b></div></div>
       ${sparkline(series, m.type)}
       <div class="chart-foot">${series.length} day${series.length > 1 ? 's' : ''} · best set per day</div>
+      ${weightBlock}
     </div>`;
   }
   view.innerHTML = html;
@@ -242,6 +252,8 @@ function renderStats() {
 
 // ---------- Card / entry markup ----------
 function movementCard(m, sub, tally, count) {
+  // Show a one-tap repeat once a set exists today (the 2nd/3rd-set case).
+  const repeat = count ? `<button class="repeat-btn" data-repeat="${m.id}" aria-label="Repeat last set">↻</button>` : '';
   return `<div class="card mv-card" data-mv="${m.id}">
     <div class="mv-emoji">${m.emoji}</div>
     <div class="mv-main">
@@ -249,6 +261,7 @@ function movementCard(m, sub, tally, count) {
       <div class="mv-sub">${sub}</div>
     </div>
     <div class="mv-tally">${count ? `<span class="check">✓</span> ${tally}` : 'Tap to log'}</div>
+    ${repeat}
   </div>`;
 }
 
@@ -280,6 +293,23 @@ function wireCards() {
   view.querySelectorAll('[data-mv]').forEach((el) => {
     el.onclick = () => openSheet(el.dataset.mv);
   });
+  view.querySelectorAll('[data-repeat]').forEach((el) => {
+    el.onclick = (ev) => { ev.stopPropagation(); repeatLastSet(el.dataset.repeat); };
+  });
+}
+
+// One-tap log a duplicate of the most recent set for a movement.
+function repeatLastSet(mvId) {
+  const prev = lastSet(mvId);
+  if (!prev) { openSheet(mvId); return; }
+  LOG.push({
+    id: makeId(), ts: Date.now(), day: TODAY, movement: mvId,
+    variation: prev.variation, rir: prev.rir, value: prev.value,
+    weight: prev.weight || 0, note: '',
+  });
+  saveLog(LOG);
+  render();
+  if (SETTINGS.autoRest) startRest(SETTINGS.restDefault);
 }
 function wireEntries() {
   view.querySelectorAll('[data-edit]').forEach((el) => {
@@ -307,17 +337,24 @@ function computeStats() {
 }
 
 // Best (max value) set per day for a movement, oldest -> newest.
-function bestPerDay(mvId) {
+// metric: 'value' (reps/seconds) or 'weight' (added load).
+function bestPerDay(mvId, metric = 'value') {
   const map = {};
   for (const e of LOG) {
     if (e.movement !== mvId) continue;
-    map[e.day] = Math.max(map[e.day] || 0, e.value);
+    const v = metric === 'weight' ? (e.weight || 0) : e.value;
+    map[e.day] = Math.max(map[e.day] || 0, v);
   }
   return Object.keys(map).sort().map((day) => ({ day, v: map[day] }));
 }
 
+// True if any logged set for this movement carried added weight.
+function hasWeight(mvId) {
+  return LOG.some((e) => e.movement === mvId && e.weight > 0);
+}
+
 // Tiny inline SVG line chart. Last ~12 points.
-function sparkline(series, type) {
+function sparkline(series, type, unitOverride) {
   const pts = series.slice(-12);
   const W = 300, H = 70, P = 6;
   const max = Math.max(...pts.map((p) => p.v));
@@ -332,7 +369,7 @@ function sparkline(series, type) {
   const line = pts.map((p, i) => xy(p, i).join(',')).join(' ');
   const dots = pts.map((p, i) => { const [x, y] = xy(p, i); return `<circle cx="${x}" cy="${y}" r="2.6"/>`; }).join('');
   const [lx, ly] = xy(pts[pts.length - 1], pts.length - 1);
-  const unit = type === 'time' ? 's' : '';
+  const unit = unitOverride != null ? unitOverride : (type === 'time' ? 's' : '');
   return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img">
     <polyline class="spark-line" points="${line}" />
     <g class="spark-dots">${dots}</g>
@@ -376,6 +413,18 @@ function openSheet(mvId, editId) {
   document.getElementById('saveSet').textContent = editId ? 'Save changes' : 'Save set';
   document.getElementById('deleteSet').hidden = !editId;
 
+  // "Last time" reference — what you did in your previous session.
+  const lt = document.getElementById('lastTime');
+  const prev = editId ? null : lastSessionSet(m.id);
+  if (prev) {
+    const d = new Date(prev.day + 'T00:00');
+    const when = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    lt.innerHTML = `<span class="lt-label">Last time (${when})</span> ${describeSet(prev)} — beat it!`;
+    lt.hidden = false;
+  } else {
+    lt.hidden = true;
+  }
+
   renderChips('variationRow', m.variations, variation, (i) => { sheetState.variation = i; });
   renderChips('rirRow', RIR_OPTIONS, rir, (i) => { sheetState.rir = i; });
   document.getElementById('sheetSaved').hidden = true;
@@ -384,9 +433,27 @@ function openSheet(mvId, editId) {
 
 // Resume at the variation last used for this movement, else the first.
 function defaultVariation(m) {
-  const last = LOG.filter((e) => e.movement === m.id).slice(-1)[0];
+  const last = lastSet(m.id);
   const idx = last ? m.variations.indexOf(last.variation) : -1;
   return idx >= 0 ? idx : 0;
+}
+
+// Most recent logged set for a movement (by timestamp). null if none.
+function lastSet(mvId) {
+  return LOG.filter((e) => e.movement === mvId).sort((a, b) => b.ts - a.ts)[0] || null;
+}
+
+// The most recent set on a *previous* day (for the "last time" reference).
+function lastSessionSet(mvId) {
+  return LOG.filter((e) => e.movement === mvId && e.day !== TODAY).sort((a, b) => b.ts - a.ts)[0] || null;
+}
+
+// Human label for a set, e.g. "12 reps · Standard +5kg".
+function describeSet(e) {
+  const m = byId(e.movement);
+  const unit = m && m.type === 'time' ? 's' : ' reps';
+  const w = e.weight ? ` +${e.weight}${SETTINGS.unit}` : '';
+  return `${e.value}${unit} · ${e.variation}${w}`;
 }
 
 function renderChips(rowId, items, selected, onPick) {
@@ -648,10 +715,73 @@ function openSettings() {
     c.onclick = () => unitRow.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
     unitRow.appendChild(c);
   });
+  // Reminder day chips (multi-select) + time.
+  const remRow = document.getElementById('remDays');
+  remRow.innerHTML = '';
+  const chosen = new Set(SETTINGS.remDays);
+  WEEKDAYS.forEach((label, i) => {
+    const c = document.createElement('button');
+    c.className = 'chip' + (chosen.has(i) ? ' sel' : '');
+    c.textContent = label;
+    c.dataset.dow = i;
+    c.onclick = () => c.classList.toggle('sel');
+    remRow.appendChild(c);
+  });
+  document.getElementById('remTime').value = SETTINGS.remTime;
   settingsSheet.hidden = false;
+}
+
+// Build a recurring .ics reminder for the chosen days/time and download it.
+function addReminderToCalendar() {
+  const days = [...document.querySelectorAll('#remDays .chip.sel')].map((c) => parseInt(c.dataset.dow, 10));
+  if (!days.length) { alert('Pick at least one day for your reminder.'); return; }
+  const time = document.getElementById('remTime').value || '18:00';
+  // Persist the choice so it's remembered next time the sheet opens.
+  SETTINGS.remDays = days;
+  SETTINGS.remTime = time;
+  saveSettings(SETTINGS);
+
+  const [hh, mm] = time.split(':').map((n) => parseInt(n, 10));
+  // First occurrence: the next upcoming chosen weekday at the chosen time.
+  const now = new Date();
+  const start = new Date(now);
+  start.setHours(hh, mm, 0, 0);
+  for (let add = 0; add < 8; add++) {
+    const cand = new Date(start);
+    cand.setDate(start.getDate() + add);
+    if (days.includes(cand.getDay()) && cand > now) { start.setTime(cand.getTime()); break; }
+  }
+  const pad = (n) => String(n).padStart(2, '0');
+  const local = (d) => `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+  const end = new Date(start.getTime() + 30 * 60000);
+  const byday = days.sort().map((d) => ICAL_DAYS[d]).join(',');
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+
+  const ics = [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Calisthenics Log//EN', 'CALSCALE:GREGORIAN',
+    'BEGIN:VEVENT',
+    `UID:calisthenics-${Date.now()}@local`,
+    `DTSTAMP:${stamp}`,
+    `DTSTART:${local(start)}`,
+    `DTEND:${local(end)}`,
+    `RRULE:FREQ=WEEKLY;BYDAY=${byday}`,
+    'SUMMARY:🏋️ Calisthenics workout',
+    'DESCRIPTION:Time to train — simple movements, proper form. Consistency is the whole game.',
+    'BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:Calisthenics workout', 'TRIGGER:PT0M', 'END:VALARM',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+
+  const blob = new Blob([ics], { type: 'text/calendar' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'calisthenics-reminder.ics';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 function closeSettings() { settingsSheet.hidden = true; }
 document.getElementById('settingsBtn').onclick = openSettings;
+document.getElementById('addReminder').onclick = addReminderToCalendar;
 settingsSheet.querySelectorAll('[data-close-settings]').forEach((el) => (el.onclick = closeSettings));
 settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
   b.onclick = () => {
@@ -665,6 +795,8 @@ document.getElementById('saveSettings').onclick = () => {
   SETTINGS.restDefault = Math.max(5, parseInt(document.getElementById('restLenInput').value, 10) || 90);
   const selUnit = document.querySelector('#unitRow .chip.sel');
   if (selUnit) SETTINGS.unit = selUnit.textContent;
+  SETTINGS.remDays = [...document.querySelectorAll('#remDays .chip.sel')].map((c) => parseInt(c.dataset.dow, 10));
+  SETTINGS.remTime = document.getElementById('remTime').value || '18:00';
   saveSettings(SETTINGS);
   render();
   closeSettings();
