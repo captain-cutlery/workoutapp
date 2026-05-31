@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v13';
+const APP_VERSION = 'v14';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -53,12 +53,22 @@ const MOVEMENTS = [
     variations: ['Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
   },
   {
-    id: 'core', name: 'Core (anti-extension)', emoji: '🧱', group: 'Core', type: 'time', range: [10, 30],
-    cues: 'Anti-extension: resist the low back arching. Brace abs hard, ribs down, neutral spine, no sagging hips. Quality tension over long sloppy holds.',
-    variations: ['Knee plank (s)', 'Plank (s)', 'Hollow hold (s)', 'Ab-wheel from knees', 'Standing ab-wheel'],
+    id: 'core', name: 'Core: anti-extension', emoji: '🧱', group: 'Core', type: 'time', range: [10, 30],
+    cues: 'Resist the low back arching. Brace abs hard, glutes and quads tight, ribs down, posterior pelvic tilt — keep one straight line, no sagging hips. Quality tension over long sloppy holds.',
+    variations: ['Plank (s)', 'RKC plank (s)', 'Long-lever plank (s)', 'Body saw (s)', 'Ab-wheel from knees', 'Standing ab-wheel'],
   },
   {
-    id: 'legraise', name: 'Leg raises (anti-rotation)', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
+    id: 'antirot', name: 'Core: anti-rotation', emoji: '🔄', group: 'Core', type: 'time', range: [10, 30],
+    cues: 'Resist the torso twisting. Brace hard and keep the hips and shoulders square — don’t let the load rotate you. (Side/Copenhagen planks are timed holds; Pallof press is slow reps.)',
+    variations: ['Pallof press', 'Suitcase carry (s)', 'Side plank (s)', 'Copenhagen (bent knee) (s)', 'Copenhagen full (s)'],
+  },
+  {
+    id: 'extension', name: 'Core: extension', emoji: '🌉', group: 'Core', type: 'reps', range: [8, 12],
+    cues: 'Reverse hyperextension: lie face-down with hips at an edge, raise the legs by squeezing the glutes and lower back. Control the lowering; don’t hyper-arch — stop at a straight line.',
+    variations: ['Floor reverse hyper', 'Bench reverse hyper', 'Weighted reverse hyper'],
+  },
+  {
+    id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
     cues: 'Move slowly with no swinging. Posteriorly tilt the pelvis so the lower back stays flat, and control the way down.',
     variations: ['Lying knee raises', 'Lying leg raises', 'Hanging knee raises', 'Hanging leg raises', 'Toes-to-bar'],
   },
@@ -91,8 +101,9 @@ const DEFAULT_SESSION = [
   { id: 'hinge',    target: 'Pair B · 3×8–12' },
   { id: 'row',      target: 'Pair C · 3×8–12' },
   { id: 'pushup',   target: 'Pair C · 3×8–12' },
-  { id: 'core',     target: 'Triplet · 3×10–30s' },
-  { id: 'legraise', target: 'Triplet · 3×8–12' },
+  { id: 'core',      target: 'Triplet · anti-ext · 3×10–30s' },
+  { id: 'antirot',   target: 'Triplet · anti-rot · 3×10–30s' },
+  { id: 'extension', target: 'Triplet · extension · 3×8–12' },
 ];
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
