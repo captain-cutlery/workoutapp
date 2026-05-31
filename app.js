@@ -5,7 +5,9 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v9';
+const APP_VERSION = 'v10';
+const APP_BUILT = '31 May 2026';
+const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
 // type: 'reps' for rep-counted work, 'time' for holds (seconds).
@@ -174,10 +176,28 @@ function renderWeekStrip() {
   }
 }
 
+// One-line momentum summary for the current week (Sun–Sat).
+function weekSummary() {
+  const now = new Date();
+  const weekStart = new Date(now);
+  weekStart.setDate(now.getDate() - now.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+  const wk = LOG.filter((e) => new Date(e.day + 'T00:00') >= weekStart);
+  if (!wk.length) return null;
+  const sessions = new Set(wk.map((e) => e.day)).size;
+  const reps = wk.filter((e) => { const m = byId(e.movement); return m && m.type === 'reps'; })
+    .reduce((s, e) => s + e.value, 0);
+  return { sessions, sets: wk.length, reps };
+}
+
 function renderToday() {
   topTitle.textContent = 'Today';
   const today = entriesOn(TODAY);
   let html = `<p class="lede">A short full-body session. Move with control, stop a couple reps shy of failure.</p>`;
+  const ws = weekSummary();
+  if (ws) {
+    html += `<div class="week-summary">📅 This week: <b>${ws.sessions}</b> session${ws.sessions > 1 ? 's' : ''} · <b>${ws.sets}</b> sets${ws.reps ? ` · <b>${ws.reps}</b> reps` : ''}</div>`;
+  }
   html += `<div class="section-row"><div class="section-title">Suggested session</div><button id="editSession" class="link-btn">Edit</button></div>`;
   for (const s of SESSION) {
     const m = byId(s.id);
@@ -243,6 +263,9 @@ function renderStats() {
     <div class="stat"><b>${s.totalSets}</b><span>total sets</span></div>
     <div class="stat"><b>${s.weekSets}</b><span>sets this week</span></div>
   </div>`;
+
+  html += `<div class="section-title">Consistency</div>`;
+  html += heatmap();
 
   html += `<div class="section-title">Progress</div>`;
   for (const m of MOVEMENTS) {
@@ -357,6 +380,46 @@ function computeStats() {
   return { streak, daysTrained: days.length, totalSets: LOG.length, weekSets };
 }
 
+// GitHub-style consistency grid: last ~18 weeks, one cell per day, shaded by
+// number of sets logged. Columns are weeks (Sun–Sat), most recent on the right.
+function heatmap() {
+  const WEEKS = 18;
+  // sets-per-day lookup
+  const perDay = {};
+  for (const e of LOG) perDay[e.day] = (perDay[e.day] || 0) + 1;
+
+  // Start from the Sunday WEEKS-1 weeks before this week's Sunday.
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const thisSunday = new Date(today);
+  thisSunday.setDate(today.getDate() - today.getDay());
+  const start = new Date(thisSunday);
+  start.setDate(thisSunday.getDate() - (WEEKS - 1) * 7);
+
+  const level = (n) => (n === 0 ? 0 : n <= 2 ? 1 : n <= 4 ? 2 : n <= 6 ? 3 : 4);
+  let cells = '';
+  for (let w = 0; w < WEEKS; w++) {
+    let col = '';
+    for (let d = 0; d < 7; d++) {
+      const day = new Date(start);
+      day.setDate(start.getDate() + w * 7 + d);
+      if (day > today) { col += `<div class="hm-cell hm-empty"></div>`; continue; }
+      const key = dayKey(day);
+      const n = perDay[key] || 0;
+      const lbl = day.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      col += `<div class="hm-cell hm-l${level(n)}" title="${lbl}: ${n} set${n === 1 ? '' : 's'}"></div>`;
+    }
+    cells += `<div class="hm-col">${col}</div>`;
+  }
+  return `<div class="card hm-card">
+    <div class="hm-grid">${cells}</div>
+    <div class="hm-legend"><span>Less</span>
+      <span class="hm-cell hm-l0"></span><span class="hm-cell hm-l1"></span>
+      <span class="hm-cell hm-l2"></span><span class="hm-cell hm-l3"></span>
+      <span class="hm-cell hm-l4"></span><span>More</span></div>
+    <div class="chart-foot">Each square is a day · darker = more sets · last ${WEEKS} weeks</div>
+  </div>`;
+}
+
 // Best (max value) set per day for a movement, oldest -> newest.
 // metric: 'value' (reps/seconds) or 'weight' (added load).
 function bestPerDay(mvId, metric = 'value') {
@@ -433,6 +496,13 @@ function openSheet(mvId, editId) {
   document.getElementById('weightUnitLabel').textContent = SETTINGS.unit;
   document.getElementById('saveSet').textContent = editId ? 'Save changes' : 'Save set';
   document.getElementById('deleteSet').hidden = !editId;
+
+  // Bike HIIT sets are time-based with a tension variation and no effort/weight;
+  // hide the irrelevant fields so the same sheet can edit them.
+  const isBike = !!m.hiit;
+  document.getElementById('effortBlock').hidden = isBike;
+  document.getElementById('weightBlock').hidden = isBike;
+  document.getElementById('valueLabel').textContent = isBike ? 'Total work (s)' : (m.type === 'time' ? 'Seconds' : 'Reps');
 
   // "Last time" reference — what you did in your previous session.
   const lt = document.getElementById('lastTime');
@@ -520,7 +590,12 @@ document.getElementById('saveSet').onclick = () => {
 
   if (sheetState.editId) {
     const e = LOG.find((x) => x.id === sheetState.editId);
-    if (e) { e.value = value; e.variation = variation; e.rir = rir; e.weight = weight; e.note = note; }
+    if (e) {
+      e.value = value;
+      e.variation = variation;
+      e.note = note;
+      if (!m.hiit) { e.rir = rir; e.weight = weight; } // keep bike's session summary + no weight
+    }
     saveLog(LOG);
     render();
     closeSheet();
@@ -549,12 +624,33 @@ document.getElementById('saveSet').onclick = () => {
 
 document.getElementById('deleteSet').onclick = () => {
   if (!sheetState.editId) return;
-  if (!confirm('Delete this set?')) return;
+  const removed = LOG.find((x) => x.id === sheetState.editId);
   LOG = LOG.filter((x) => x.id !== sheetState.editId);
   saveLog(LOG);
   render();
   closeSheet();
+  if (removed) {
+    const m = byId(removed.movement);
+    showToast(`Deleted ${m ? m.name : 'set'}`, () => {
+      LOG.push(removed);
+      LOG.sort((a, b) => a.ts - b.ts);
+      saveLog(LOG);
+      render();
+    });
+  }
 };
+
+// ---------- Undo toast ----------
+const toast = document.getElementById('toast');
+let toastTimer = null;
+function showToast(msg, onUndo) {
+  clearTimeout(toastTimer);
+  document.getElementById('toastMsg').textContent = msg;
+  const undoBtn = document.getElementById('toastUndo');
+  undoBtn.onclick = () => { clearTimeout(toastTimer); toast.hidden = true; onUndo(); };
+  toast.hidden = false;
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 5000);
+}
 
 // ---------- Rest timer (persistent banner) ----------
 const restBar = document.getElementById('restBar');
@@ -895,7 +991,7 @@ function openSettings() {
     remRow.appendChild(c);
   });
   document.getElementById('remTime').value = SETTINGS.remTime;
-  document.getElementById('appVersion').textContent = APP_VERSION;
+  document.getElementById('appVersion').textContent = APP_LABEL;
   document.getElementById('updateStatus').hidden = true;
   settingsSheet.hidden = false;
 }
