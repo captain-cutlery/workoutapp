@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v14';
+const APP_VERSION = 'v15';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -43,11 +43,6 @@ const MOVEMENTS = [
     variations: ['Assisted', 'Squat', 'Split squat', 'Bulgarian split squat', 'Beginner shrimp', 'Intermediate shrimp', 'Advanced shrimp', 'Pistol'],
   },
   {
-    id: 'calf', name: 'Calf raises', emoji: '🦶', group: 'Legs', type: 'reps', range: [8, 12],
-    cues: 'Full range — stretch at the bottom, rise high onto the toes and pause at the top. Slow and controlled, no bouncing.',
-    variations: ['Two-leg', 'Single-leg', 'Deficit (off a step)', 'Single-leg deficit'],
-  },
-  {
     id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [8, 12],
     cues: 'Brace and squeeze the glutes to flatten the low back. Send the hips back, hinge from the hips with a neutral spine — never round the back. (RR uses a weighted RDL if you have a barbell.)',
     variations: ['Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
@@ -71,16 +66,6 @@ const MOVEMENTS = [
     id: 'legraise', name: 'Leg raises', emoji: '🔻', group: 'Core', type: 'reps', range: [8, 12],
     cues: 'Move slowly with no swinging. Posteriorly tilt the pelvis so the lower back stays flat, and control the way down.',
     variations: ['Lying knee raises', 'Lying leg raises', 'Hanging knee raises', 'Hanging leg raises', 'Toes-to-bar'],
-  },
-  {
-    id: 'lsit', name: 'L-sit', emoji: '📐', group: 'Core', type: 'time', range: [10, 30],
-    cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds; advance when you hold 30s for all sets.',
-    variations: ['Foot-supported (s)', 'Tuck hold (s)', 'One-leg (s)', 'Full L-sit (s)'],
-  },
-  {
-    id: 'handstand', name: 'Handstand', emoji: '🤸', group: 'Skill', type: 'time', range: [10, 30],
-    cues: 'Practise while fresh, before strength work. Hands shoulder-width, push tall through the shoulders, squeeze glutes and point toes. Stack hips over hands.',
-    variations: ['Plank → pike (s)', 'Wall plank, feet low (s)', 'Wall handstand chest-in (s)', 'Wall handstand back-to-wall (s)', 'Freestanding kick-up (s)'],
   },
   {
     id: 'bike', name: 'Bike HIIT', emoji: '🚴', group: 'Cardio', type: 'time', hiit: true,
@@ -498,6 +483,7 @@ function openSheet(mvId, editId) {
     const e = LOG.find((x) => x.id === editId);
     if (!e) return;
     m = byId(e.movement);
+    if (!m) return; // orphaned entry (movement was removed) — can't edit, leave as-is
     variation = Math.max(0, m.variations.indexOf(e.variation));
     rir = Math.max(0, RIR_OPTIONS.indexOf(e.rir));
     value = e.value;
