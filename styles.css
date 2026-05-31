@@ -50,6 +50,22 @@ body {
 /* Weight sub-chart on Stats */
 .chart-sub { color: var(--muted); font-size: 13px; margin: 14px 0 4px; border-top: 1px solid var(--line); padding-top: 12px; }
 
+/* Bike HIIT timer */
+.hiit-fields { display: flex; gap: 10px; margin-top: 8px; }
+.hiit-field { flex: 1; }
+.hiit-num { width: 100%; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 12px; padding: 14px; font-size: 22px; font-weight: 700; text-align: center; }
+.hiit-num:focus { outline: none; border-color: var(--accent); }
+#hiitRun { text-align: center; padding: 10px 0 4px; border-radius: 16px; transition: background 0.2s; }
+#hiitRun.is-work { background: var(--accent-dim); }
+#hiitRun.is-rest { background: var(--surface-2); }
+.hiit-phase { font-size: 18px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-top: 8px; }
+#hiitRun.is-work .hiit-phase { color: var(--accent); }
+.hiit-big { font-size: 88px; font-weight: 800; line-height: 1; margin: 6px 0; font-variant-numeric: tabular-nums; }
+#hiitRun.is-work .hiit-big { color: var(--accent); }
+.hiit-round-info { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+.hiit-done { font-size: 48px; text-align: center; margin: 24px 0; }
+.hiit-done div { font-size: 17px; color: var(--text); margin-top: 8px; }
+
 /* Reminder controls */
 .rem-time-row { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; font-size: 15px; }
 .time-input { background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 16px; }
