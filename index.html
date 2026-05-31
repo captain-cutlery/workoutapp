@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f1115" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Calisthenics Log</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <h1 id="topTitle">Today</h1>
+    <div id="weekStrip" class="week-strip" aria-label="This week"></div>
+  </header>
+
+  <main id="view" class="view"></main>
+
+  <nav class="tabbar" role="tablist">
+    <button class="tab is-active" data-tab="today" role="tab">
+      <span class="tab-ico">☀</span><span>Today</span>
+    </button>
+    <button class="tab" data-tab="log" role="tab">
+      <span class="tab-ico">＋</span><span>Log</span>
+    </button>
+    <button class="tab" data-tab="history" role="tab">
+      <span class="tab-ico">≡</span><span>History</span>
+    </button>
+  </nav>
+
+  <!-- Logging sheet -->
+  <div id="sheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close></div>
+    <div class="sheet-card" role="dialog" aria-modal="true">
+      <div class="sheet-grip"></div>
+      <h2 id="sheetTitle">Log movement</h2>
+      <p id="sheetCues" class="cues"></p>
+
+      <label class="field-label">Variation</label>
+      <div id="variationRow" class="chip-row"></div>
+
+      <div id="repsBlock">
+        <label class="field-label" id="valueLabel">Reps</label>
+        <div class="stepper">
+          <button class="step-btn" data-step="-1" aria-label="Decrease">−</button>
+          <input id="valueInput" class="value-input" type="number" inputmode="numeric" value="8" min="0" />
+          <button class="step-btn" data-step="1" aria-label="Increase">＋</button>
+        </div>
+      </div>
+
+      <label class="field-label">Effort — stop a couple reps shy of failure</label>
+      <div id="rirRow" class="chip-row"></div>
+
+      <div class="sheet-actions">
+        <button id="saveSet" class="btn-primary">Save set</button>
+        <button class="btn-ghost" data-close>Cancel</button>
+      </div>
+      <p id="sheetSaved" class="saved-hint" hidden></p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(()=>{}));
+    }
+  </script>
+</body>
+</html>
