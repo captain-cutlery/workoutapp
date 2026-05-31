@@ -1,5 +1,7 @@
-/* Offline-first service worker. Bump CACHE on each release to refresh assets. */
-const CACHE = 'cal-log-v5';
+/* Service worker.
+   Strategy: network-first for our own files when online (so updates land on the
+   next launch automatically), falling back to the cache when offline. */
+const CACHE = 'cal-log-v6';
 const ASSETS = [
   './',
   './index.html',
@@ -22,16 +24,18 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Cache-first for our own assets; network fallback otherwise.
+// Network-first for same-origin GETs: fetch fresh, update the cache, and fall
+// back to the cached copy only when the network is unavailable.
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== self.location.origin) return;
   e.respondWith(
-    caches.match(e.request).then((hit) =>
-      hit || fetch(e.request).then((res) => {
+    fetch(req)
+      .then((res) => {
         const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy)).catch(() => {});
+        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
-      }).catch(() => caches.match('./index.html'))
-    )
+      })
+      .catch(() => caches.match(req).then((hit) => hit || caches.match('./index.html')))
   );
 });
