@@ -57,6 +57,11 @@ const MOVEMENTS = [
     cues: 'Push the floor away, depress the shoulders and lock the knees. Build it in short, high-quality holds.',
     variations: ['Foot-supported (s)', 'Tuck hold (s)', 'One-leg (s)', 'Full L-sit (s)'],
   },
+  {
+    id: 'bike', name: 'Bike HIIT', emoji: '🚴', group: 'Cardio', type: 'time', hiit: true,
+    cues: 'Hard bursts on the bike. Push near-max during work intervals, spin easy to recover. Raise the tension dial to make bursts harder as you progress.',
+    variations: ['Tension 1', 'Tension 2', 'Tension 3', 'Tension 4', 'Tension 5', 'Tension 6', 'Tension 7', 'Tension 8'],
+  },
 ];
 
 const byId = (id) => MOVEMENTS.find((m) => m.id === id);
@@ -106,6 +111,15 @@ let SESSION = loadSession();
 
 const SETTINGS_KEY = 'cal_settings_v1';
 const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg', remDays: [1, 3, 5], remTime: '18:00' };
+// Last-used HIIT setup, remembered between sessions.
+const HIIT_KEY = 'cal_hiit_v1';
+const DEFAULT_HIIT = { work: 30, rest: 60, rounds: 8, tension: 4 };
+function loadHiit() {
+  try { return { ...DEFAULT_HIIT, ...(JSON.parse(localStorage.getItem(HIIT_KEY)) || {}) }; }
+  catch { return { ...DEFAULT_HIIT }; }
+}
+function saveHiit(h) { localStorage.setItem(HIIT_KEY, JSON.stringify(h)); }
+let HIIT = loadHiit();
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const ICAL_DAYS = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
 function loadSettings() {
@@ -291,7 +305,8 @@ function renderEntryRows(items, editable) {
 
 function wireCards() {
   view.querySelectorAll('[data-mv]').forEach((el) => {
-    el.onclick = () => openSheet(el.dataset.mv);
+    const m = byId(el.dataset.mv);
+    el.onclick = () => (m && m.hiit) ? openHiit() : openSheet(el.dataset.mv);
   });
   view.querySelectorAll('[data-repeat]').forEach((el) => {
     el.onclick = (ev) => { ev.stopPropagation(); repeatLastSet(el.dataset.repeat); };
@@ -300,6 +315,8 @@ function wireCards() {
 
 // One-tap log a duplicate of the most recent set for a movement.
 function repeatLastSet(mvId) {
+  const m = byId(mvId);
+  if (m && m.hiit) { openHiit(); return; }
   const prev = lastSet(mvId);
   if (!prev) { openSheet(mvId); return; }
   LOG.push({
@@ -589,6 +606,152 @@ document.getElementById('restSkip').onclick = () => {
 restBar.querySelectorAll('[data-rest]').forEach((b) => {
   b.onclick = () => { rest.remaining = Math.max(0, rest.remaining + parseInt(b.dataset.rest, 10)); paintRest(); };
 });
+
+// ---------- Bike HIIT interval timer ----------
+const hiitSheet = document.getElementById('hiitSheet');
+const hiit = { phase: 'idle', round: 0, remaining: 0, intId: null, completed: 0 };
+
+function openHiit() {
+  HIIT = loadHiit();
+  document.getElementById('hiitWork').value = HIIT.work;
+  document.getElementById('hiitRest').value = HIIT.rest;
+  document.getElementById('hiitRounds').value = HIIT.rounds;
+  // Tension chips 1..8
+  const row = document.getElementById('hiitTensionRow');
+  row.innerHTML = '';
+  for (let t = 1; t <= 8; t++) {
+    const c = document.createElement('button');
+    c.className = 'chip' + (t === HIIT.tension ? ' sel' : '');
+    c.textContent = t;
+    c.dataset.tension = t;
+    c.onclick = () => row.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
+    row.appendChild(c);
+  }
+  showHiitSetup();
+  hiitSheet.hidden = false;
+}
+function closeHiit() {
+  clearInterval(hiit.intId);
+  hiit.phase = 'idle';
+  hiitSheet.hidden = true;
+}
+hiitSheet.querySelectorAll('[data-close-hiit]').forEach((el) => (el.onclick = () => {
+  if (hiit.phase !== 'idle' && hiit.phase !== 'done' && !confirm('Stop the workout? Completed rounds will still be logged.')) return;
+  if (hiit.completed > 0 && hiit.phase !== 'done') logHiitSession();
+  closeHiit();
+}));
+
+function showHiitSetup() {
+  document.getElementById('hiitSetup').hidden = false;
+  document.getElementById('hiitRun').hidden = true;
+}
+
+// Read + persist the chosen setup from the inputs.
+function readHiitSetup() {
+  const sel = hiitSheet.querySelector('#hiitTensionRow .chip.sel');
+  HIIT = {
+    work: Math.max(5, parseInt(document.getElementById('hiitWork').value, 10) || 30),
+    rest: Math.max(5, parseInt(document.getElementById('hiitRest').value, 10) || 60),
+    rounds: Math.max(1, parseInt(document.getElementById('hiitRounds').value, 10) || 8),
+    tension: sel ? parseInt(sel.dataset.tension, 10) : 4,
+  };
+  saveHiit(HIIT);
+  return HIIT;
+}
+
+document.getElementById('hiitStart').onclick = () => {
+  readHiitSetup();
+  hiit.completed = 0;
+  hiit.round = 1;
+  document.getElementById('hiitSetup').hidden = true;
+  document.getElementById('hiitRun').hidden = false;
+  enterPhase('lead', 3); // 3-2-1 countdown before the first burst
+};
+
+// Phase machine: 'lead' -> ('work' -> 'rest')* -> 'done'.
+function enterPhase(phase, seconds) {
+  hiit.phase = phase;
+  hiit.remaining = seconds;
+  paintHiit();
+  clearInterval(hiit.intId);
+  hiit.intId = setInterval(tickHiit, 1000);
+  if (phase === 'work') beep(880, 0.18);
+  else if (phase === 'rest') beep(440, 0.18);
+  else if (phase === 'lead') beep(440, 0.1);
+}
+function tickHiit() {
+  hiit.remaining--;
+  // Count-in cue on the last 3 seconds of work/rest.
+  if (hiit.remaining > 0 && hiit.remaining <= 3 && (hiit.phase === 'work' || hiit.phase === 'rest')) beep(660, 0.08);
+  paintHiit();
+  if (hiit.remaining > 0) return;
+
+  if (hiit.phase === 'lead') { enterPhase('work', HIIT.work); return; }
+  if (hiit.phase === 'work') {
+    hiit.completed = hiit.round;
+    if (hiit.round >= HIIT.rounds) { finishHiit(); return; }
+    enterPhase('rest', HIIT.rest);
+    return;
+  }
+  if (hiit.phase === 'rest') { hiit.round++; enterPhase('work', HIIT.work); return; }
+}
+function finishHiit() {
+  clearInterval(hiit.intId);
+  hiit.phase = 'done';
+  buzz();
+  logHiitSession();
+  const run = document.getElementById('hiitRun');
+  run.innerHTML = `<div class="hiit-done">✅<div>Done — ${hiit.completed} × ${HIIT.work}s logged</div></div>
+    <button id="hiitClose2" class="btn-primary">Finish</button>`;
+  document.getElementById('hiitClose2').onclick = closeHiit;
+}
+function paintHiit() {
+  const label = { lead: 'Get ready', work: 'GO!', rest: 'Recover', done: 'Done' }[hiit.phase] || '';
+  document.getElementById('hiitPhase').textContent = label;
+  document.getElementById('hiitBig').textContent = Math.max(0, hiit.remaining);
+  document.getElementById('hiitRoundInfo').textContent =
+    hiit.phase === 'lead' ? `Tension ${HIIT.tension} · ${HIIT.rounds} rounds`
+                          : `Round ${hiit.round} of ${HIIT.rounds} · tension ${HIIT.tension}`;
+  const run = document.getElementById('hiitRun');
+  run.classList.toggle('is-work', hiit.phase === 'work');
+  run.classList.toggle('is-rest', hiit.phase === 'rest' || hiit.phase === 'lead');
+}
+
+// Log the session as one entry: value = total work seconds, note describes structure.
+function logHiitSession() {
+  if (hiit.completed <= 0) return;
+  LOG.push({
+    id: makeId(), ts: Date.now(), day: TODAY, movement: 'bike',
+    variation: `Tension ${HIIT.tension}`,
+    rir: `${hiit.completed}×${HIIT.work}s`,
+    value: hiit.completed * HIIT.work,
+    weight: 0,
+    note: `${hiit.completed} × ${HIIT.work}s on / ${HIIT.rest}s off`,
+  });
+  saveLog(LOG);
+  hiit.completed = 0; // guard against double-logging on close
+  render();
+}
+
+// A single tone (used for interval cues); reuses one AudioContext.
+let _actx = null;
+function beep(freq, dur) {
+  try {
+    _actx = _actx || new (window.AudioContext || window.webkitAudioContext)();
+    if (_actx.state === 'suspended') _actx.resume();
+    const o = _actx.createOscillator(), g = _actx.createGain();
+    o.connect(g); g.connect(_actx.destination);
+    o.frequency.value = freq; g.gain.value = 0.07;
+    o.start(); o.stop(_actx.currentTime + dur);
+  } catch {}
+  if (navigator.vibrate && freq >= 800) navigator.vibrate(120);
+}
+
+document.getElementById('hiitPause').onclick = () => {
+  if (hiit.phase === 'idle' || hiit.phase === 'done') return;
+  if (hiit.intId) { clearInterval(hiit.intId); hiit.intId = null; document.getElementById('hiitPause').textContent = '▶'; }
+  else { hiit.intId = setInterval(tickHiit, 1000); document.getElementById('hiitPause').textContent = '⏸'; }
+};
 
 // ---------- Custom session editor ----------
 const sessionSheet = document.getElementById('sessionSheet');

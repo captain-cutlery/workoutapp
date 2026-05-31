@@ -108,6 +108,52 @@
     </div>
   </div>
 
+  <!-- Bike HIIT interval timer sheet -->
+  <div id="hiitSheet" class="sheet" hidden>
+    <div class="sheet-backdrop" data-close-hiit></div>
+    <div class="sheet-card" role="dialog" aria-modal="true">
+      <div class="sheet-grip"></div>
+
+      <div id="hiitSetup">
+        <h2>🚴 Bike HIIT</h2>
+        <p class="cues">Hard bursts with easy spinning to recover. Set the dial to your tension, then go — the timer beeps each switch so you don't need to watch the screen.</p>
+
+        <label class="field-label">Tension (match your bike dial)</label>
+        <div id="hiitTensionRow" class="chip-row"></div>
+
+        <div class="hiit-fields">
+          <div class="hiit-field">
+            <label class="field-label">Work (s)</label>
+            <input id="hiitWork" type="number" inputmode="numeric" class="hiit-num" value="30" min="5" />
+          </div>
+          <div class="hiit-field">
+            <label class="field-label">Rest (s)</label>
+            <input id="hiitRest" type="number" inputmode="numeric" class="hiit-num" value="60" min="5" />
+          </div>
+          <div class="hiit-field">
+            <label class="field-label">Rounds</label>
+            <input id="hiitRounds" type="number" inputmode="numeric" class="hiit-num" value="8" min="1" />
+          </div>
+        </div>
+
+        <div class="sheet-actions">
+          <button id="hiitStart" class="btn-primary">Start workout</button>
+          <button class="btn-ghost" data-close-hiit>Cancel</button>
+        </div>
+      </div>
+
+      <div id="hiitRun" hidden>
+        <div id="hiitPhase" class="hiit-phase">Get ready</div>
+        <div id="hiitBig" class="hiit-big">3</div>
+        <div id="hiitRoundInfo" class="hiit-round-info"></div>
+        <div class="sheet-actions">
+          <button id="hiitPause" class="btn-outline">⏸</button>
+          <button class="btn-ghost" data-close-hiit>Stop</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Settings sheet -->
   <div id="settingsSheet" class="sheet" hidden>
     <div class="sheet-backdrop" data-close-settings></div>
