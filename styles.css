@@ -93,6 +93,55 @@ body {
 }
 .btn-outline.danger { color: var(--danger); border-color: #4a2326; }
 
+.section-row { display: flex; justify-content: space-between; align-items: center; }
+.link-btn { background: none; border: 0; color: var(--accent); font-size: 14px; padding: 4px 4px; margin: 18px 4px 6px; cursor: pointer; }
+
+/* Tappable history entries */
+.entry.tappable { cursor: pointer; }
+.entry.tappable:active { opacity: 0.6; }
+.e-val { white-space: nowrap; }
+.chev { color: var(--muted); font-size: 18px; margin-left: 4px; }
+
+/* Stats */
+.stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 6px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; text-align: center; }
+.stat b { display: block; font-size: 30px; color: var(--accent); line-height: 1.1; }
+.stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+.chart-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+.chart-foot { color: var(--muted); font-size: 12px; margin-top: 8px; }
+.spark { width: 100%; height: 70px; display: block; overflow: visible; }
+.spark-line { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.spark-dots circle { fill: var(--accent); }
+.spark-val { fill: var(--text); font-size: 12px; font-weight: 700; }
+
+/* Rest timer banner */
+.rest-bar {
+  position: fixed; left: 0; right: 0; z-index: 7;
+  bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 8px;
+  background: var(--surface-2); border-top: 1px solid var(--line);
+  padding: 10px 12px;
+}
+.rest-bar[hidden] { display: none; }
+.rest-bar.done { background: var(--accent-dim); }
+.rest-mid { flex: 1; text-align: center; }
+.rest-time { font-size: 24px; font-weight: 800; color: var(--accent); line-height: 1; }
+.rest-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+.rest-adj { background: var(--surface); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px 12px; font-size: 14px; cursor: pointer; min-width: 48px; }
+.rest-skip { background: none; border: 0; color: var(--muted); font-size: 20px; padding: 10px; cursor: pointer; }
+
+/* Rest presets in saved hint */
+.saved-line { margin-bottom: 10px; }
+.rest-presets { display: flex; gap: 8px; justify-content: center; }
+.rest-preset { background: var(--surface-2); border: 1px solid var(--accent); color: var(--accent); border-radius: 999px; padding: 9px 18px; font-size: 15px; font-weight: 600; cursor: pointer; }
+
+/* Session editor */
+.sess-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.sess-pick { display: flex; align-items: center; gap: 8px; flex: 0 0 45%; font-size: 15px; }
+.sess-pick input { width: 20px; height: 20px; accent-color: var(--accent); }
+.sess-target { flex: 1; min-width: 0; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); border-radius: 10px; padding: 10px; font-size: 13px; }
+.sess-target:focus { outline: none; border-color: var(--accent); }
+
 /* Tab bar */
 .tabbar {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 6;
