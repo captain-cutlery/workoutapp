@@ -43,6 +43,12 @@ body {
 .last-time { background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 9px 12px; font-size: 13px; margin: 0 0 14px; }
 .last-time .lt-label { display: block; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
 
+/* RR-style target range + progression nudge */
+.progress-hint { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+.progress-hint .ph-label { display: block; color: var(--text); font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+.progress-hint .ph-go { color: var(--accent); }
+.progress-hint b { color: var(--accent); }
+
 /* Repeat-last-set button on movement cards */
 .repeat-btn { flex: 0 0 auto; margin-left: 10px; width: 42px; height: 42px; border-radius: 12px; background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); font-size: 20px; cursor: pointer; }
 .repeat-btn:active { background: var(--accent); color: #05231a; }
