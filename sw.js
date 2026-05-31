@@ -1,7 +1,7 @@
 /* Service worker.
    Strategy: network-first for our own files when online (so updates land on the
    next launch automatically), falling back to the cache when offline. */
-const CACHE = 'cal-log-v8';
+const CACHE = 'cal-log-v9';
 const ASSETS = [
   './',
   './index.html',
@@ -14,6 +14,11 @@ const ASSETS = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+});
+
+// Let the page force a waiting worker to activate (the "Check for update" button).
+self.addEventListener('message', (e) => {
+  if (e.data && e.data.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (e) => {
