@@ -82,7 +82,7 @@ body {
 .week-day.today { outline: 2px solid var(--accent); }
 
 /* View */
-.view { padding: 4px 16px 24px; }
+.view { padding: 4px 16px calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 24px); }
 .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); margin: 22px 4px 10px; }
 .lede { color: var(--muted); margin: 2px 4px 4px; font-size: 14px; }
 
