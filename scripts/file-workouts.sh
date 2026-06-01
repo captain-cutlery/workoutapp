@@ -25,6 +25,23 @@ DST="/media/data/media/Obsidian/Second Brain/PARA Folders/2.Area Folders/Health/
 mkdir -p "$DST"
 shopt -s nullglob
 
+echo "Source: $SRC"
+echo "Dest:   $DST"
+
+if [ ! -d "$SRC" ]; then
+  echo "ERROR: source folder does not exist from this server's view."
+  echo "On Unraid, user shares are usually under /mnt/user/... — check the real path."
+  exit 1
+fi
+if [ ! -d "$DST" ]; then
+  echo "ERROR: destination folder does not exist (could not be created)."
+  exit 1
+fi
+
+echo "Files in source:"
+ls -la "$SRC" || true
+
+moved=0
 for f in "$SRC"/20*.md; do
   base="$(basename "$f")"
   # Vanadium re-exports the same day as "2026-06-01 (1).md" or "2026-06-01(1).md"
@@ -35,4 +52,7 @@ for f in "$SRC"/20*.md; do
   # half-written file.
   mv -f "$f" "$DST/$clean"
   echo "filed: $clean"
+  moved=$((moved + 1))
 done
+
+echo "Done — $moved file(s) moved."
