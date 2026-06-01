@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v20';
+const APP_VERSION = 'v21';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -974,21 +974,20 @@ function exportData() {
 
 // ----- Obsidian / PARA export config -----
 // Workouts are filed as an Area in the PARA vault (2.Area Folders/Health/Fitness).
-// These constants are the only values you may need to tweak to match your vault
-// exactly — edit them here if any differ:
+// Frontmatter mirrors the user's actual note style (lean: a tags list + a few
+// content fields + a quoted links wikilink — no Dataview blocks). Edit these
+// constants if any vault value differs.
 const OBSIDIAN = {
-  area: 'Fitness',          // name of your fitness Area note (used as [[area]])
-  areasLink: '2. Area',     // PARA index note for the `links` field (the "2. Area.md" note)
-  tags: ['area', 'fitness', 'workout'],
+  tags: ['area', 'Fitness'], // PARA category tag + topic tag (matches "resource"/"Video_Games" style)
+  areasLink: '2. Area',      // PARA index note for the `links` field (the "2. Area.md" note)
   // Optional folder path placed inside the zip so it extracts to the right spot.
   // Set to '' to export bare .md files at the zip root instead.
   folder: 'PARA Folders/2.Area Folders/Health/Fitness',
 };
 
-// Build one PARA-formatted Obsidian note for a single day: full YAML
-// frontmatter (title, created, modified, tags, links, area, projects), the
-// Area-style Dataview sections, then the workout table. Filename/title are the
-// date only, matching the existing daily notes in the Fitness folder.
+// Build one Obsidian note for a single day, matching the vault's note style:
+// lean YAML frontmatter (tags, date, sets, reps, links) then a workout table.
+// Filename is the date only, matching the existing daily notes in Fitness/.
 function dayMarkdown(day) {
   const items = entriesOn(day).slice().sort((a, b) => a.ts - b.ts);
   const sets = items.length;
@@ -998,33 +997,14 @@ function dayMarkdown(day) {
 
   const lines = [
     '---',
-    `title: ${day}`,
-    `created: ${day}`,
-    `modified: ${day}`,
     'tags:',
     ...OBSIDIAN.tags.map((t) => `  - ${t}`),
-    `links: "[[${OBSIDIAN.areasLink}]]"`,
-    `area: "[[${OBSIDIAN.area}]]"`,
-    'projects:',
+    `date: ${day}`,
     `sets: ${sets}`,
     `reps: ${reps}`,
+    `links: "[[${OBSIDIAN.areasLink}]]"`,
     '---',
-    '',
-    '###### Related Projects',
-    '```dataview',
-    'table Status, Deadline',
-    'from [[]] and #project',
-    '',
-    '```',
-    '---',
-    '###### Related Resources',
-    '```dataview',
-    'list',
-    'from [[]] and #resource',
-    '```',
-    '---',
-    '',
-    `# ${pretty}`,
+    `## ${pretty}`,
     '',
     '| Movement | Variation | Result | Effort | Note |',
     '| --- | --- | --- | --- | --- |',
