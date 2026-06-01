@@ -83,6 +83,11 @@ body {
 .version-row .btn-outline { flex: 0 0 auto; width: auto; }
 .update-status { color: var(--accent); font-size: 13px; margin: 8px 0 0; }
 
+/* About / credits links */
+.about-links { display: flex; flex-direction: column; gap: 8px; }
+.about-link { display: block; background: var(--surface-2); border: 1px solid var(--line); color: var(--text); text-decoration: none; padding: 12px 14px; border-radius: 12px; font-size: 14px; }
+.about-link:active { background: var(--accent-dim); border-color: var(--accent); }
+
 .week-strip { display: flex; gap: 6px; margin-top: 12px; }
 .week-day {
   flex: 1; text-align: center; font-size: 11px; color: var(--muted);
