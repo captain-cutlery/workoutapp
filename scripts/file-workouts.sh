@@ -27,9 +27,10 @@ shopt -s nullglob
 
 for f in "$SRC"/20*.md; do
   base="$(basename "$f")"
-  # Vanadium re-exports the same day as "2026-06-01 (1).md"; normalise back to
-  # "2026-06-01.md" so re-exporting just refreshes the note instead of piling up.
-  clean="$(printf '%s' "$base" | sed -E 's/ \([0-9]+\)\.md$/.md/')"
+  # Vanadium re-exports the same day as "2026-06-01 (1).md" or "2026-06-01(1).md"
+  # (with or without a space); normalise either back to "2026-06-01.md" so
+  # re-exporting just refreshes the note instead of piling up duplicates.
+  clean="$(printf '%s' "$base" | sed -E 's/ ?\([0-9]+\)\.md$/.md/')"
   # mv on the same filesystem is atomic, so Obsidian/Syncthing never see a
   # half-written file.
   mv -f "$f" "$DST/$clean"
