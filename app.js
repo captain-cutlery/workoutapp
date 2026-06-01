@@ -978,7 +978,7 @@ function exportData() {
 // exactly — edit them here if any differ:
 const OBSIDIAN = {
   area: 'Fitness',          // name of your fitness Area note (used as [[area]])
-  areasLink: '2. Areas',    // PARA index note for the `links` field (per CLAUDE.md)
+  areasLink: '2. Area',     // PARA index note for the `links` field (the "2. Area.md" note)
   tags: ['area', 'fitness', 'workout'],
   // Optional folder path placed inside the zip so it extracts to the right spot.
   // Set to '' to export bare .md files at the zip root instead.
