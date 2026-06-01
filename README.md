@@ -1,37 +1,121 @@
 # Calisthenics Log
 
 A dead-simple workout tracker for bodyweight training, built on
-[KBoges](https://www.kboges.com/) principles: **a few compound movements,
-full range of motion, consistent effort — sustainability over complexity.**
+[KBoges](https://www.kboges.com/) principles — *a few compound movements, full
+range of motion, consistent effort, sustainability over complexity* — and the
+exercise progressions from the
+[r/bodyweightfitness Recommended Routine (RR)](https://www.reddit.com/r/bodyweightfitness/wiki/kb/recommended_routine/).
 
-It's a Progressive Web App (PWA). No app store, no account, no server.
-Your data lives only on your phone. Works fully offline once installed.
+It's a **Progressive Web App (PWA)**: plain HTML/CSS/JS, no framework, no build
+step, no account, no server. All data lives on the device in `localStorage`.
+Works fully offline once installed.
+
+---
+
+## For a future session (orientation)
+
+If you're an assistant picking this project up fresh, read this section first.
+
+- **Stack:** vanilla HTML/CSS/JS PWA. No dependencies, no build, no tests yet.
+- **Files:** `index.html` (markup + SW registration), `styles.css`, `app.js`
+  (all logic), `sw.js` (service worker, offline cache), `manifest.webmanifest`,
+  `icons/` (generated PNGs).
+- **Hosting:** GitHub Pages off `main` (Settings → Pages → deploy from `main`,
+  root). Live at `https://captain-cutlery.github.io/workoutapp/`.
+- **Repo:** `captain-cutlery/workoutapp`. The user runs Android + the GitHub
+  mobile app, and is newer to git — explain GitHub steps simply.
+- **Workflow:** develop on branch `claude/android-workout-app-O9EFD`, commit,
+  push, then open a PR and **post the PR/merge URL** for the user to tap-merge
+  in the GitHub mobile app. One batch of work = one PR. Do **not** create a PR
+  unless asked, but here the user expects a merge link after each change.
+- **Versioning:** every release bumps **two** values that must stay in step —
+  `APP_VERSION` in `app.js` and `CACHE` in `sw.js` (e.g. `v17` / `cal-log-v17`).
+  The version also shows in Settings as `APP_LABEL` (e.g. `v17 · 31 May 2026`).
+- **Caching gotcha:** the SW is **network-first** so updates land on the next
+  online launch. If an install ever seems stuck, Settings → **Check for update**
+  forces it; last resort is clearing site data (which also wipes logs — export
+  first).
+- **Data shape:** `LOG` is an array of set objects:
+  `{ id, ts, day:'YYYY-MM-DD', movement, variation, rir, value, weight, note }`.
+  Holds store seconds in `value` (`type: 'time'`); reps store count
+  (`type: 'reps'`). Bike HIIT sessions store total work-seconds in `value` and
+  the structure in `rir`/`note`.
+- **localStorage keys:** `cal_log_v1` (log), `cal_session_v1` (custom Today
+  session), `cal_settings_v1` (settings), `cal_hiit_v1` (last HIIT setup).
+
+---
 
 ## Features
 
-- **Today** — a short suggested full-body session (push / pull / legs / core)
-  with form cues and gentle "stop a couple reps shy of failure" targets.
-- **Log** — free-log any movement and variation whenever you want.
-- **History** — per-day history, weekly streak strip, export to JSON.
-- Rep- and time-based movements, each with progressions from easy to hard.
-- Installs to your home screen and runs like a native app, offline.
+### Logging
+- **Today tab** — a suggested full-body session mirroring the RR structure
+  (Pair A: Pull-ups + Squats · Pair B: Dips + Hinge · Pair C: Rows + Push-ups ·
+  Core triplet). Fully editable via the **Edit** link; custom sessions persist.
+- **Log tab** — free-log any movement and variation any time.
+- One-tap logging via a bottom sheet: variation chips, value stepper, effort
+  (RIR), optional **added weight** (kg/lb), optional **note**.
+- **Last time** reference shows your previous session for that movement.
+- **Repeat last set** (↻) button on a movement card duplicates your last set.
+- **Edit / delete** any logged set (tap it in Today or History). Delete shows a
+  5-second **Undo** toast.
+
+### Programming guidance (RR-aligned)
+- Each movement has an easy→hard **progression ladder** from the official RR
+  progression wikis, plus a working **rep/time range** and a **progression
+  nudge** ("Ready to progress 🎉 — try the next variation").
+- Default strength target is **8–12 reps** (the RR's higher-rep option);
+  isometric holds are **10–30s**. Effort guidance is **failure − 1**.
+
+### Rest & cardio
+- **Rest timer** — auto-starts after a set (toggle in Settings) or via quick
+  presets; persistent countdown banner with ±15s, pause, skip, beep + vibrate.
+- **Bike HIIT** — hands-free interval timer for an exercise bike: set
+  work/rest/rounds/tension (1–8), 3-2-1 lead-in, audible work/rest cues,
+  auto-logs the session.
+
+### Review & data
+- **Stats tab** — streak, days trained, totals, per-movement progress
+  sparklines (reps/holds + added weight), and a GitHub-style **consistency
+  heatmap** (last 18 weeks).
+- **History tab** — per-day log; weekly streak strip on every screen.
+- **Export JSON** (full backup) and **Restore** (import a JSON backup).
+- **Export Markdown** — one Obsidian note per workout day (`YYYY-MM-DD.md`)
+  bundled in a single `.zip`, with per-day YAML frontmatter
+  (`date, type, sets, reps, tags`) for Dataview + a table of sets. Uses a small
+  built-in ZIP writer (no dependencies).
+- **Settings** — rest auto-start + default length, weight unit, workout
+  reminder (calendar `.ics` export — see below), app version + Check for update.
+
+### Reminders
+- Because reliable scheduled web push isn't feasible for a serverless PWA on
+  Android, the reminder is a **recurring `.ics` calendar event**: pick days +
+  time in Settings → "Add reminder to calendar" → import once into your phone's
+  calendar. Native, offline, no permissions.
+
+---
 
 ## Movements
 
-Push-ups · Dips · Pull-ups · Rows · Squats · Core holds — each with a
-progression ladder so you advance variation, not just numbers.
+Push-ups · Dips · Pull-ups · Rows · Squats · Hip hinge ·
+Core: anti-extension · Core: anti-rotation · Core: extension · Leg raises ·
+Bike HIIT.
+
+Ladders follow the RR progression guides (e.g. push-ups: Vertical → Incline →
+Full → Diamond → Pseudo-planche → Rings → RTO). *(L-sit, calf raises and
+handstand were intentionally removed per preference.)*
+
+---
 
 ## Install on Android
 
-1. Host the folder over HTTPS (see below) and open the URL in Chrome.
+1. Open `https://captain-cutlery.github.io/workoutapp/` in Chrome.
 2. Menu (⋮) → **Add to Home screen** / **Install app**.
-3. Launch from the icon — it opens fullscreen and works without a connection.
+3. Launch from the icon — opens fullscreen and works offline.
 
-## Hosting (free, via GitHub Pages)
+## Hosting (free, GitHub Pages)
 
-Push this repo, then in GitHub: **Settings → Pages → Build from branch**,
-pick the branch and `/ (root)`. Your app appears at
-`https://<user>.github.io/<repo>/`.
+In GitHub: **Settings → Pages → Deploy from a branch → `main` / root**.
+Published at `https://<user>.github.io/<repo>/`.
 
 ## Run locally
 
@@ -41,8 +125,48 @@ python3 -m http.server 8000
 ```
 A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
 
+---
+
+## Architecture notes
+
+- `app.js` holds the movement library (`MOVEMENTS`), default session, all
+  rendering (Today/Log/Stats/History), the log/edit sheet, rest + HIIT timers,
+  settings, and import/export. It renders by rebuilding innerHTML per tab.
+- `sw.js` is network-first for same-origin GETs, falling back to cache offline;
+  it handles a `SKIP_WAITING` message so "Check for update" can activate a new
+  version immediately. **Bump `CACHE` on every release.**
+- Movement removal is safe: rendering and the edit sheet guard against orphaned
+  log entries whose `movement` id no longer exists.
+
+## Release checklist
+
+1. Make changes in `app.js` / `styles.css` / `index.html`.
+2. Bump `APP_VERSION` (app.js) **and** `CACHE` (sw.js) together; update
+   `APP_BUILT` date if desired.
+3. `node --check app.js && node --check sw.js`.
+4. Commit, push to the feature branch, open a PR, share the merge link.
+
+## Version history
+
+- **v1** — initial PWA: Today/Log/History, JSON export, offline install.
+- **v2** — rest timer, edit/delete sets, Stats tab, custom session, restore.
+- **v3** — auto-start rest timer + Settings; more movements.
+- **v4** — per-set weight and notes.
+- **v5** — last-time reference, repeat-last-set, weight on charts, calendar
+  reminder (`.ics`).
+- **v6** — network-first service worker (automatic updates).
+- **v7** — Bike HIIT movement + hands-free interval timer.
+- **v8** — fix bottom content cut off behind the tab bar.
+- **v9** — app version + "Check for update" button in Settings.
+- **v10** — undo-on-delete, editable HIIT, week summary, version label,
+  consistency heatmap.
+- **v11–v12** — adopt RR progression ladders (corrected from the official
+  wikis), RR-style scheme, core triplet (anti-ext / anti-rot / extension).
+- **v13** — switch default strength target to 8–12 reps.
+- **v15** — remove L-sit, calf raises, handstand.
+- **v16** — Markdown export (initial, single file).
+- **v17** — Markdown export as one note per day, bundled in a `.zip`.
+
 ## Tech
 
-Plain HTML/CSS/JS — no framework, no build step. Files: `index.html`,
-`styles.css`, `app.js`, `manifest.webmanifest`, `sw.js`, `icons/`.
-Data is stored in `localStorage` under the key `cal_log_v1`.
+Plain HTML/CSS/JS — no framework, no build step. Data in `localStorage`.

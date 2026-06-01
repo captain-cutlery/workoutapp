@@ -966,52 +966,136 @@ function exportData() {
   download(`calisthenics-log-${TODAY}.json`, JSON.stringify(LOG, null, 2), 'application/json');
 }
 
-// Export the log as Obsidian-friendly Markdown: YAML frontmatter for
-// Dataview, then one section per day with a table of sets.
+// Build one Obsidian-friendly note for a single day: YAML frontmatter (for
+// Dataview) + a table of that day's sets. Obsidian uses the filename as the
+// note title, and the H1 inside repeats the date for readability.
+function dayMarkdown(day) {
+  const items = entriesOn(day).slice().sort((a, b) => a.ts - b.ts);
+  const sets = items.length;
+  const reps = items.reduce((s, e) => { const m = byId(e.movement); return s + (m && m.type === 'reps' ? e.value : 0); }, 0);
+  const d = new Date(day + 'T00:00');
+  const pretty = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const lines = [
+    '---',
+    `date: ${day}`,
+    'type: workout',
+    `sets: ${sets}`,
+    `reps: ${reps}`,
+    'tags: [fitness, calisthenics]',
+    '---',
+    '',
+    `# Workout — ${pretty}`,
+    '',
+    '| Movement | Variation | Result | Effort | Note |',
+    '| --- | --- | --- | --- | --- |',
+  ];
+  for (const e of items) {
+    const m = byId(e.movement);
+    const name = m ? m.name : e.movement;
+    const unit = m && m.type === 'time' ? 's' : ' reps';
+    let result = `${e.value}${unit}`;
+    if (e.weight) result += ` +${e.weight}${SETTINGS.unit}`;
+    const note = (e.note || '').replace(/\|/g, '\\|');
+    lines.push(`| ${name} | ${e.variation} | ${result} | ${e.rir} | ${note} |`);
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+// Export one Markdown note per workout day, bundled into a single .zip
+// (browsers block firing many downloads at once). Filenames are the date, so
+// they drop straight into an Obsidian daily-notes vault.
 function exportMarkdown() {
   if (!LOG.length) { alert('Nothing logged yet to export.'); return; }
-  const days = [...new Set(LOG.map((e) => e.day))].sort().reverse();
-  const totalSets = LOG.length;
-  const totalReps = LOG.reduce((s, e) => { const m = byId(e.movement); return s + (m && m.type === 'reps' ? e.value : 0); }, 0);
+  const days = [...new Set(LOG.map((e) => e.day))].sort();
+  const enc = new TextEncoder();
+  const files = days.map((day) => ({ name: `${day}.md`, data: enc.encode(dayMarkdown(day)) }));
+  downloadBlob(`calisthenics-markdown-${TODAY}.zip`, buildZip(files));
+}
 
-  const lines = [];
-  lines.push('---');
-  lines.push('type: workout-log');
-  lines.push(`exported: ${TODAY}`);
-  lines.push(`days_trained: ${days.length}`);
-  lines.push(`total_sets: ${totalSets}`);
-  lines.push(`total_reps: ${totalReps}`);
-  lines.push('tags: [fitness, calisthenics]');
-  lines.push('---');
-  lines.push('');
-  lines.push('# Calisthenics Log');
-  lines.push('');
-
-  for (const day of days) {
-    const items = entriesOn(day).slice().sort((a, b) => a.ts - b.ts);
-    const d = new Date(day + 'T00:00');
-    const pretty = d.toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    lines.push(`## ${day} — ${pretty}`);
-    lines.push('');
-    lines.push('| Movement | Variation | Result | Effort | Note |');
-    lines.push('| --- | --- | --- | --- | --- |');
-    for (const e of items) {
-      const m = byId(e.movement);
-      const name = m ? m.name : e.movement;
-      const unit = m && m.type === 'time' ? 's' : ' reps';
-      let result = `${e.value}${unit}`;
-      if (e.weight) result += ` +${e.weight}${SETTINGS.unit}`;
-      const note = (e.note || '').replace(/\|/g, '\\|');
-      lines.push(`| ${name} | ${e.variation} | ${result} | ${e.rir} | ${note} |`);
-    }
-    lines.push('');
+// ----- Minimal ZIP writer (store / no compression) -----
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
   }
+  return t;
+})();
+function crc32(bytes) {
+  let c = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function buildZip(files) {
+  const enc = new TextEncoder();
+  const locals = [];
+  const central = [];
+  let offset = 0;
+  for (const f of files) {
+    const nameBytes = enc.encode(f.name);
+    const crc = crc32(f.data);
+    const size = f.data.length;
+    const lh = new Uint8Array(30 + nameBytes.length);
+    const lv = new DataView(lh.buffer);
+    lv.setUint32(0, 0x04034b50, true);
+    lv.setUint16(4, 20, true);
+    lv.setUint16(6, 0, true);
+    lv.setUint16(8, 0, true);
+    lv.setUint16(10, 0, true);
+    lv.setUint16(12, 0, true);
+    lv.setUint32(14, crc, true);
+    lv.setUint32(18, size, true);
+    lv.setUint32(22, size, true);
+    lv.setUint16(26, nameBytes.length, true);
+    lv.setUint16(28, 0, true);
+    lh.set(nameBytes, 30);
+    locals.push(lh, f.data);
 
-  download(`calisthenics-log-${TODAY}.md`, lines.join('\n'), 'text/markdown');
+    const ch = new Uint8Array(46 + nameBytes.length);
+    const cv = new DataView(ch.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);
+    cv.setUint16(6, 20, true);
+    cv.setUint16(8, 0, true);
+    cv.setUint16(10, 0, true);
+    cv.setUint16(12, 0, true);
+    cv.setUint16(14, 0, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, size, true);
+    cv.setUint32(24, size, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true);
+    cv.setUint16(32, 0, true);
+    cv.setUint16(34, 0, true);
+    cv.setUint16(36, 0, true);
+    cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    ch.set(nameBytes, 46);
+    central.push(ch);
+
+    offset += lh.length + f.data.length;
+  }
+  const centralSize = central.reduce((s, c) => s + c.length, 0);
+  const eocd = new Uint8Array(22);
+  const ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true);
+  ev.setUint16(6, 0, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, centralSize, true);
+  ev.setUint32(16, offset, true);
+  ev.setUint16(20, 0, true);
+  return new Blob([...locals, ...central, eocd], { type: 'application/zip' });
 }
 
 function download(filename, text, type) {
-  const blob = new Blob([text], { type });
+  downloadBlob(filename, new Blob([text], { type }));
+}
+function downloadBlob(filename, blob) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
