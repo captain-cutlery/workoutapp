@@ -3,44 +3,55 @@
 # file-workouts.sh — move exported workout notes into the Obsidian vault.
 #
 # Part of the Calisthenics Log workflow:
-#   Phone: "Today → vault" export saves YYYY-MM-DD.md into Download
+#   Phone: "Today -> vault" export saves YYYY-MM-DD.md into Download
 #     -> Syncthing (Download, Send Only, filtered to 20*.md)
-#     -> Server staging folder $SRC (Receive Only)
+#     -> Server staging folder "WorkoutExports" (Receive Only)
 #     -> THIS SCRIPT moves the note into the vault's Fitness folder
 #     -> the existing whole-vault Syncthing carries it back to all devices
 #
 # Run on the server that can natively see both paths (e.g. Unraid via the
 # "User Scripts" plugin) on a schedule, e.g. every 5 minutes:  */5 * * * *
 #
-# IMPORTANT: $DST is inside the already-synced Obsidian vault. $SRC must NOT be
-# inside the vault (Syncthing folders cannot overlap) — keep it as a sibling.
+# Paths are AUTO-DISCOVERED under /mnt/user so you don't have to find them.
+# If auto-discovery fails, set SRC and DST manually in the OVERRIDE block below.
 
-set -euo pipefail
+set -uo pipefail
 
-# --- Edit these two paths to match your server ---
-SRC="/media/data/media/WorkoutExports"
-DST="/media/data/media/Obsidian/Second Brain/PARA Folders/2.Area Folders/Health/Fitness"
-# -------------------------------------------------
+# ---- Optional manual override (leave blank to auto-discover) ----
+SRC=""   # e.g. "/mnt/user/media/WorkoutExports"
+DST=""   # e.g. "/mnt/user/media/Obsidian/Second Brain/PARA Folders/2.Area Folders/Health/Fitness"
+# -----------------------------------------------------------------
 
-mkdir -p "$DST"
-shopt -s nullglob
+SEARCH_ROOT="/mnt/user"
 
-echo "Source: $SRC"
-echo "Dest:   $DST"
-
-if [ ! -d "$SRC" ]; then
-  echo "ERROR: source folder does not exist from this server's view."
-  echo "On Unraid, user shares are usually under /mnt/user/... — check the real path."
-  exit 1
-fi
-if [ ! -d "$DST" ]; then
-  echo "ERROR: destination folder does not exist (could not be created)."
-  exit 1
+# Auto-find the staging folder (the Syncthing share named "WorkoutExports").
+if [ -z "$SRC" ]; then
+  SRC="$(find "$SEARCH_ROOT" -maxdepth 5 -type d -name "WorkoutExports" 2>/dev/null | head -n1)"
 fi
 
-echo "Files in source:"
+# Auto-find the vault's Fitness folder (…/Health/Fitness inside the Obsidian vault).
+if [ -z "$DST" ]; then
+  DST="$(find "$SEARCH_ROOT" -maxdepth 8 -type d -path "*Health/Fitness" 2>/dev/null | head -n1)"
+fi
+
+echo "Source (staging): ${SRC:-<not found>}"
+echo "Dest   (vault)  : ${DST:-<not found>}"
+
+if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
+  echo "ERROR: could not locate the 'WorkoutExports' staging folder under $SEARCH_ROOT."
+  echo "Set SRC manually at the top of this script, then re-run."
+  exit 1
+fi
+if [ -z "$DST" ] || [ ! -d "$DST" ]; then
+  echo "ERROR: could not locate the vault's '…/Health/Fitness' folder under $SEARCH_ROOT."
+  echo "Set DST manually at the top of this script, then re-run."
+  exit 1
+fi
+
+echo "Files currently in staging:"
 ls -la "$SRC" || true
 
+shopt -s nullglob
 moved=0
 for f in "$SRC"/20*.md; do
   base="$(basename "$f")"
