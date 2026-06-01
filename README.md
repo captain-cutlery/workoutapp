@@ -166,7 +166,68 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
 - **v15** — remove L-sit, calf raises, handstand.
 - **v16** — Markdown export (initial, single file).
 - **v17** — Markdown export as one note per day, bundled in a `.zip`.
+- **v18** — kettlebell swing added to the hip-hinge progression.
+- **v19** — KBoges & Recommended Routine credit links in Settings (About).
+- **v20** — PARA-format Obsidian export + single-note "Today → vault" export.
+- **v21** — match export to the user's real (lean) note frontmatter.
+- **v22** — finalise export tags (`area, Fitness, workout, calisthenics`).
+
+## Obsidian / PARA export & Syncthing workflow
+
+The app exports each day as a note matching the user's PARA vault. Two export
+buttons (History → data section):
+
+- **Today → vault** — saves a single `YYYY-MM-DD.md` (best for the synced flow).
+- **All days (zip)** — full history, one note per day, in a `.zip`.
+
+Exported note shape (lean, matching the vault's real style — config in the
+`OBSIDIAN` block near the top of `exportMarkdown` in `app.js`):
+
+```markdown
+---
+tags:
+  - area
+  - Fitness
+  - workout
+  - calisthenics
+date: 2026-06-01
+sets: 1
+reps: 12
+links: "[[2. Area]]"
+---
+## Monday, June 1, 2026
+
+| Movement | Variation | Result | Effort | Note |
+| --- | --- | --- | --- | --- |
+| Push-ups | Full | 12 reps | 1–2 left |  |
+```
+
+### Hands-off sync pipeline (the user's setup)
+
+A PWA can't write to an arbitrary phone folder, so files route via Syncthing +
+a server-side mover (`scripts/file-workouts.sh`):
+
+```
+Phone: "Today → vault" → Download
+  → Syncthing (Download folder, Send Only, ignore-filtered to "!20*.md / *")
+  → Server staging: /mnt/user/data/media/WorkoutExports (Receive Only)
+  → scripts/file-workouts.sh moves notes into the vault's Fitness folder
+    (Unraid User Scripts, cron */15 * * * *)
+  → existing whole-vault Syncthing carries it back to all devices
+```
+
+Key facts for a future session:
+- Vault (Unraid host view): `/mnt/user/data/media/Obsidian/Second Brain/`
+  Fitness folder: `…/PARA Folders/2.Area Folders/Health/Fitness`
+- Staging and vault **must not overlap** (Syncthing folders can't nest), so the
+  staging folder is a sibling and the script does the crossing.
+- The mover normalises Vanadium's duplicate names (`2026-06-01(1).md` →
+  `2026-06-01.md`) and overwrites, so re-exporting a day just refreshes it.
+- The app is the source of truth: don't hand-edit a day's note in Obsidian then
+  re-export it, or the mover overwrites your edits.
+- Moved files end up owned by `nobody users` on Unraid (no chown needed).
 
 ## Tech
 
 Plain HTML/CSS/JS — no framework, no build step. Data in `localStorage`.
+Plus `scripts/file-workouts.sh` (server-side Obsidian filing, runs on Unraid).
