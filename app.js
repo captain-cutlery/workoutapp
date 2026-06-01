@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v19';
+const APP_VERSION = 'v20';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -942,11 +942,15 @@ document.getElementById('resetSession').onclick = () => {
 function dataButtons() {
   return `<div class="section-title">Your data</div>
     <p class="lede">Stored only on this device. Export regularly as a backup.</p>
+    <p class="lede"><b>Obsidian:</b> "Today → vault" saves a single PARA note for today —
+      point Chrome's download folder at your synced vault's Fitness folder (or enable
+      "Ask where to save") and Syncthing does the rest. "All days (zip)" exports the full history.</p>
     <div class="btn-row">
-      <button id="exportBtn" class="btn-outline">Export JSON</button>
-      <button id="exportMdBtn" class="btn-outline">Export Markdown</button>
+      <button id="exportTodayBtn" class="btn-outline">Today → vault</button>
+      <button id="exportMdBtn" class="btn-outline">All days (zip)</button>
     </div>
     <div class="btn-row">
+      <button id="exportBtn" class="btn-outline">Backup JSON</button>
       <button id="importBtn" class="btn-outline">Restore</button>
       <button id="clearBtn" class="btn-outline danger">Clear</button>
     </div>`;
@@ -954,6 +958,8 @@ function dataButtons() {
 function wireDataButtons() {
   const ex = document.getElementById('exportBtn');
   if (ex) ex.onclick = exportData;
+  const td = document.getElementById('exportTodayBtn');
+  if (td) td.onclick = exportTodayMarkdown;
   const md = document.getElementById('exportMdBtn');
   if (md) md.onclick = exportMarkdown;
   const im = document.getElementById('importBtn');
@@ -966,9 +972,23 @@ function exportData() {
   download(`calisthenics-log-${TODAY}.json`, JSON.stringify(LOG, null, 2), 'application/json');
 }
 
-// Build one Obsidian-friendly note for a single day: YAML frontmatter (for
-// Dataview) + a table of that day's sets. Obsidian uses the filename as the
-// note title, and the H1 inside repeats the date for readability.
+// ----- Obsidian / PARA export config -----
+// Workouts are filed as an Area in the PARA vault (2.Area Folders/Health/Fitness).
+// These constants are the only values you may need to tweak to match your vault
+// exactly — edit them here if any differ:
+const OBSIDIAN = {
+  area: 'Fitness',          // name of your fitness Area note (used as [[area]])
+  areasLink: '2. Areas',    // PARA index note for the `links` field (per CLAUDE.md)
+  tags: ['area', 'fitness', 'workout'],
+  // Optional folder path placed inside the zip so it extracts to the right spot.
+  // Set to '' to export bare .md files at the zip root instead.
+  folder: 'PARA Folders/2.Area Folders/Health/Fitness',
+};
+
+// Build one PARA-formatted Obsidian note for a single day: full YAML
+// frontmatter (title, created, modified, tags, links, area, projects), the
+// Area-style Dataview sections, then the workout table. Filename/title are the
+// date only, matching the existing daily notes in the Fitness folder.
 function dayMarkdown(day) {
   const items = entriesOn(day).slice().sort((a, b) => a.ts - b.ts);
   const sets = items.length;
@@ -978,14 +998,33 @@ function dayMarkdown(day) {
 
   const lines = [
     '---',
-    `date: ${day}`,
-    'type: workout',
+    `title: ${day}`,
+    `created: ${day}`,
+    `modified: ${day}`,
+    'tags:',
+    ...OBSIDIAN.tags.map((t) => `  - ${t}`),
+    `links: "[[${OBSIDIAN.areasLink}]]"`,
+    `area: "[[${OBSIDIAN.area}]]"`,
+    'projects:',
     `sets: ${sets}`,
     `reps: ${reps}`,
-    'tags: [fitness, calisthenics]',
     '---',
     '',
-    `# Workout — ${pretty}`,
+    '###### Related Projects',
+    '```dataview',
+    'table Status, Deadline',
+    'from [[]] and #project',
+    '',
+    '```',
+    '---',
+    '###### Related Resources',
+    '```dataview',
+    'list',
+    'from [[]] and #resource',
+    '```',
+    '---',
+    '',
+    `# ${pretty}`,
     '',
     '| Movement | Variation | Result | Effort | Note |',
     '| --- | --- | --- | --- | --- |',
@@ -1003,15 +1042,24 @@ function dayMarkdown(day) {
   return lines.join('\n');
 }
 
-// Export one Markdown note per workout day, bundled into a single .zip
-// (browsers block firing many downloads at once). Filenames are the date, so
-// they drop straight into an Obsidian daily-notes vault.
+// Export one PARA note per workout day, bundled into a single .zip (browsers
+// block firing many downloads at once). Files are named by date and optionally
+// nested under the Fitness folder path so they extract into the right place.
 function exportMarkdown() {
   if (!LOG.length) { alert('Nothing logged yet to export.'); return; }
   const days = [...new Set(LOG.map((e) => e.day))].sort();
   const enc = new TextEncoder();
-  const files = days.map((day) => ({ name: `${day}.md`, data: enc.encode(dayMarkdown(day)) }));
+  const dir = OBSIDIAN.folder ? OBSIDIAN.folder.replace(/\/$/, '') + '/' : '';
+  const files = days.map((day) => ({ name: `${dir}${day}.md`, data: enc.encode(dayMarkdown(day)) }));
   downloadBlob(`calisthenics-markdown-${TODAY}.zip`, buildZip(files));
+}
+
+// Export just today's PARA note as a single `YYYY-MM-DD.md` file. Ideal for a
+// Syncthing'd vault: with Chrome set to save to (or "ask" for) the Fitness
+// folder, the file lands in the vault and syncs automatically.
+function exportTodayMarkdown() {
+  if (!entriesOn(TODAY).length) { alert('Nothing logged today yet.'); return; }
+  download(`${TODAY}.md`, dayMarkdown(TODAY), 'text/markdown');
 }
 
 // ----- Minimal ZIP writer (store / no compression) -----
