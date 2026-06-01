@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v17';
+const APP_VERSION = 'v18';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -44,8 +44,8 @@ const MOVEMENTS = [
   },
   {
     id: 'hinge', name: 'Hip hinge', emoji: '🍑', group: 'Hinge', type: 'reps', range: [8, 12],
-    cues: 'Brace and squeeze the glutes to flatten the low back. Send the hips back, hinge from the hips with a neutral spine — never round the back. (RR uses a weighted RDL if you have a barbell.)',
-    variations: ['Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
+    cues: 'Brace and squeeze the glutes to flatten the low back. Send the hips back, hinge from the hips with a neutral spine — never round the back. Kettlebell swings are a back-friendly loaded option: snap the hips through, float the bell with the glutes (don’t lift with the arms or low back).',
+    variations: ['Kettlebell swing', 'Romanian deadlift', 'Single-leg deadlift', 'Banded Nordic negative', 'Banded Nordic curl', 'Nordic curl'],
   },
   {
     id: 'core', name: 'Core: anti-extension', emoji: '🧱', group: 'Core', type: 'time', range: [10, 30],
