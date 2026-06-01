@@ -1,0 +1,26 @@
+# Reference only — the user creates this in Obsidian via /base + the Filter GUI,
+# which guarantees valid syntax for their Obsidian version. This mirrors the
+# intended result: one filter on the `workout` tag, columns name/date/sets/reps,
+# sorted by date descending. Built to match the user's existing bases, which use
+# a `file has tag` filter (e.g. Video_Games).
+filters:
+  and:
+    - 'file.hasTag("workout")'
+properties:
+  note.date:
+    displayName: Date
+  note.sets:
+    displayName: Sets
+  note.reps:
+    displayName: Reps
+views:
+  - type: table
+    name: All Workouts
+    order:
+      - file.name
+      - date
+      - sets
+      - reps
+    sort:
+      - property: date
+        direction: DESC
