@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v21';
+const APP_VERSION = 'v22';
 const APP_BUILT = '31 May 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -978,7 +978,7 @@ function exportData() {
 // content fields + a quoted links wikilink — no Dataview blocks). Edit these
 // constants if any vault value differs.
 const OBSIDIAN = {
-  tags: ['area', 'Fitness'], // PARA category tag + topic tag (matches "resource"/"Video_Games" style)
+  tags: ['area', 'Fitness', 'workout', 'calisthenics'], // PARA category + topic tags
   areasLink: '2. Area',      // PARA index note for the `links` field (the "2. Area.md" note)
   // Optional folder path placed inside the zip so it extracts to the right spot.
   // Set to '' to export bare .md files at the zip root instead.
