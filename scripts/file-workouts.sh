@@ -9,44 +9,25 @@
 #     -> THIS SCRIPT moves the note into the vault's Fitness folder
 #     -> the existing whole-vault Syncthing carries it back to all devices
 #
-# Run on the server that can natively see both paths (e.g. Unraid via the
-# "User Scripts" plugin) on a schedule, e.g. every 5 minutes:  */5 * * * *
+# Run on the server (Unraid "User Scripts" plugin) on a schedule, e.g. every
+# 5 minutes:  */5 * * * *
 #
-# Paths are AUTO-DISCOVERED under /mnt/user so you don't have to find them.
-# If auto-discovery fails, set SRC and DST manually in the OVERRIDE block below.
+# Paths below are the Unraid HOST view (/mnt/user/...), not the desktop share
+# view (/media/...). Confirmed on this server. Edit if your layout changes.
 
 set -uo pipefail
 
-# ---- Optional manual override (leave blank to auto-discover) ----
-SRC=""   # e.g. "/mnt/user/media/WorkoutExports"
-DST=""   # e.g. "/mnt/user/media/Obsidian/Second Brain/PARA Folders/2.Area Folders/Health/Fitness"
-# -----------------------------------------------------------------
+SRC="/mnt/user/data/media/WorkoutExports"
+DST="/mnt/user/data/media/Obsidian/Second Brain/PARA Folders/2.Area Folders/Health/Fitness"
 
-SEARCH_ROOT="/mnt/user"
+echo "Source (staging): $SRC"
+echo "Dest   (vault)  : $DST"
 
-# Auto-find the staging folder (the Syncthing share named "WorkoutExports").
-if [ -z "$SRC" ]; then
-  SRC="$(find "$SEARCH_ROOT" -maxdepth 5 -type d -name "WorkoutExports" 2>/dev/null | head -n1)"
-fi
-
-# Auto-find the vault's Fitness folder (…/Health/Fitness inside the Obsidian vault).
-if [ -z "$DST" ]; then
-  DST="$(find "$SEARCH_ROOT" -maxdepth 8 -type d -path "*Health/Fitness" 2>/dev/null | head -n1)"
-fi
-
-echo "Source (staging): ${SRC:-<not found>}"
-echo "Dest   (vault)  : ${DST:-<not found>}"
-
-if [ -z "$SRC" ] || [ ! -d "$SRC" ]; then
-  echo "ERROR: could not locate the 'WorkoutExports' staging folder under $SEARCH_ROOT."
-  echo "Set SRC manually at the top of this script, then re-run."
+if [ ! -d "$SRC" ]; then
+  echo "ERROR: staging folder not found: $SRC"
   exit 1
 fi
-if [ -z "$DST" ] || [ ! -d "$DST" ]; then
-  echo "ERROR: could not locate the vault's '…/Health/Fitness' folder under $SEARCH_ROOT."
-  echo "Set DST manually at the top of this script, then re-run."
-  exit 1
-fi
+mkdir -p "$DST"
 
 echo "Files currently in staging:"
 ls -la "$SRC" || true
