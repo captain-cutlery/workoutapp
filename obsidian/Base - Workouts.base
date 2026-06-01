@@ -1,0 +1,33 @@
+filters:
+  and:
+    - 'tags.contains("workout")'
+properties:
+  note.date:
+    displayName: Date
+  note.sets:
+    displayName: Sets
+  note.reps:
+    displayName: Reps
+views:
+  - type: table
+    name: All Workouts
+    order:
+      - file.name
+      - date
+      - sets
+      - reps
+    sort:
+      - property: date
+        direction: DESC
+  - type: table
+    name: This Month
+    filters:
+      and:
+        - 'date >= date(now).format("YYYY-MM-01")'
+    order:
+      - date
+      - sets
+      - reps
+    sort:
+      - property: date
+        direction: DESC
