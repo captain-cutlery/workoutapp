@@ -105,6 +105,15 @@ body {
 /* Routine badge on Today (shown for day-based routines instead of "Edit") */
 .routine-badge { color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 999px; font-size: 12px; padding: 3px 10px; margin: 18px 4px 6px; white-space: nowrap; }
 
+/* Week-at-a-glance plan for weekday-based routines */
+.wk-plan { display: flex; gap: 4px; margin: 6px 0 12px; }
+.wk-plan-day { flex: 1; text-align: center; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 6px 2px; min-width: 0; }
+.wk-plan-day b { display: block; font-size: 11px; color: var(--muted); }
+.wk-plan-day span { display: block; font-size: 11px; color: var(--accent); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wk-plan-day.is-rest span { color: var(--muted); }
+.wk-plan-day.is-today { border-color: var(--accent); background: var(--accent-dim); }
+.wk-plan-day.is-today b { color: var(--text); }
+
 /* Rest-day card */
 .rest-card { color: var(--muted); font-size: 14px; line-height: 1.5; }
 .rest-card b { color: var(--text); }
