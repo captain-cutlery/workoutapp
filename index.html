@@ -57,6 +57,10 @@
       <div class="sheet-grip"></div>
       <h2 id="sheetTitle">Log movement</h2>
       <p id="sheetCues" class="cues"></p>
+      <button id="cardThumb" class="card-thumb" hidden aria-label="View exercise card">
+        <img id="cardThumbImg" alt="" />
+        <span class="card-thumb-hint">Tap to enlarge</span>
+      </button>
       <div id="lastTime" class="last-time" hidden></div>
       <div id="progressHint" class="progress-hint" hidden></div>
 
@@ -170,6 +174,17 @@
       <div id="routineRow" class="chip-row"></div>
       <p id="routineBlurb" class="cues"></p>
 
+      <label class="field-label">Exercise cards</label>
+      <p class="cues">Import your own SuperMover card images (a <code>.zip</code> or the
+        individual pictures). They're downscaled and stored on this device only —
+        never uploaded, and never part of the app's public files.</p>
+      <div class="version-row">
+        <span id="cardCount" class="version-text">No cards imported yet</span>
+        <button id="importCardsBtn" class="btn-outline">Import</button>
+      </div>
+      <p id="cardStatus" class="update-status" hidden></p>
+      <button id="clearCardsBtn" class="btn-outline danger" style="margin-top:10px">Remove all cards</button>
+
       <label class="field-label">Rest timer</label>
       <label class="toggle-row">
         <span>Auto-start rest after each set</span>
@@ -223,8 +238,17 @@
     <button id="toastUndo" class="toast-undo">Undo</button>
   </div>
 
+  <!-- Full-screen exercise card viewer -->
+  <div id="cardViewer" class="card-viewer" hidden>
+    <img id="cardViewerImg" alt="Exercise card" />
+    <button id="cardViewerClose" class="card-viewer-close" aria-label="Close">✕</button>
+  </div>
+
   <!-- Hidden file input for restoring a backup -->
   <input id="importFile" type="file" accept="application/json,.json" hidden />
+
+  <!-- Hidden file input for importing exercise cards (zip or images) -->
+  <input id="cardFile" type="file" accept=".zip,application/zip,image/*" multiple hidden />
 
   <script src="app.js"></script>
   <script>

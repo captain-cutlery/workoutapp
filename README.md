@@ -128,6 +128,23 @@ switching is non-destructive and instantly reversible.
   cadence, sets to failure, ~1 min rest, progress by *adding reps* rather than
   advancing a variation.
 
+### Exercise cards (on-device only)
+
+The SuperMover exercise cards are artwork from a **paid product**, so they are
+deliberately **not committed to this repo** (it is public, and GitHub Pages
+would serve them at a public URL). Instead the user imports their own copy:
+
+- **Settings → Exercise cards → Import** accepts a `.zip` or individual images.
+- The zip is read in-browser via `DecompressionStream('deflate-raw')` — no
+  library. Images are downscaled (max 1200px wide, WebP q85) and stored in
+  **IndexedDB** (`cal_cards`), keyed by movement id. Nothing is uploaded.
+- Filenames map to movement ids via `CARD_ALIASES` + `matchCardName()`.
+  20 of the 23 supplied cards map; Hindu Squats, Step Up and Pseudo-Planche
+  Push-ups have no matching movement and are reported as skipped.
+- A stored card appears under the form cues in the log sheet, tap to enlarge.
+- **Remove all cards** clears the store. Cards survive app updates but are
+  wiped by "clear site data" (as is the log — export first).
+
 Implementation notes for a future session:
 - `ROUTINES` registry in `app.js`; `SETTINGS.routine` defaults to `'rr'`.
 - A routine with a `days[]` array is weekday-based (indexed by `getDay()`,
@@ -209,6 +226,10 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
 - **v23** — routine switcher: added The Bioneer's SuperMover split
   (workout-only schedule) alongside the Recommended Routine, with day-aware
   Today, SuperMover rep guidance, and 17 new movements. RR remains default.
+- **v24** — fix RR rep guidance appearing on SuperMover-only exercises;
+  programme-aware effort label.
+- **v25** — optional on-device exercise cards: import a zip/images in Settings,
+  stored in IndexedDB, shown in the log sheet with tap-to-enlarge.
 
 ## Obsidian / PARA export & Syncthing workflow
 

@@ -109,6 +109,19 @@ body {
 .rest-card { color: var(--muted); font-size: 14px; line-height: 1.5; }
 .rest-card b { color: var(--text); }
 
+/* Exercise card thumbnail in the log sheet */
+.card-thumb { display: block; width: 100%; padding: 0; margin: 0 0 14px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; cursor: pointer; position: relative; }
+.card-thumb[hidden] { display: none; }
+.card-thumb img { display: block; width: 100%; height: auto; }
+.card-thumb-hint { position: absolute; right: 8px; bottom: 8px; background: rgba(0,0,0,0.6); color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 999px; }
+.card-thumb:active { border-color: var(--accent); }
+
+/* Full-screen card viewer */
+.card-viewer { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,0.92); display: flex; align-items: center; justify-content: center; padding: 12px; overflow: auto; }
+.card-viewer[hidden] { display: none; }
+.card-viewer img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+.card-viewer-close { position: absolute; top: calc(env(safe-area-inset-top) + 10px); right: 14px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.14); color: #fff; border: 0; font-size: 20px; cursor: pointer; }
+
 /* Undo toast */
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%);

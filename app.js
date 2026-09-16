@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v24';
+const APP_VERSION = 'v25';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -705,6 +705,7 @@ function openSheet(mvId, editId) {
 
   document.getElementById('sheetTitle').textContent = (editId ? 'Edit · ' : '') + m.name;
   document.getElementById('sheetCues').textContent = m.cues;
+  showCardFor(m.id); // async; reveals the card only if one is stored
   document.getElementById('valueLabel').textContent = m.type === 'time' ? 'Seconds' : 'Reps';
   document.getElementById('valueInput').value = value;
   document.getElementById('weightInput').value = weight;
@@ -1398,6 +1399,224 @@ function clearData() {
   render();
 }
 
+// ---------- Exercise cards (on-device only) ----------
+// The SuperMover cards are artwork from a paid product, so they are never
+// committed to this (public) repo. Instead the user imports their own copy
+// once; images are downscaled and kept in IndexedDB on the device.
+
+const CARD_DB = 'cal_cards';
+const CARD_STORE = 'cards';
+const CARD_MAX_W = 1200;   // plenty for a phone, keeps the card text legible
+const CARD_QUALITY = 0.85;
+
+function cardDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(CARD_DB, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(CARD_STORE)) req.result.createObjectStore(CARD_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function cardTx(mode, fn) {
+  return cardDB().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction(CARD_STORE, mode);
+    const store = tx.objectStore(CARD_STORE);
+    const out = fn(store);
+    tx.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+const cardPut   = (id, blob) => cardTx('readwrite', (s) => s.put(blob, id));
+const cardGet   = (id)       => cardTx('readonly',  (s) => s.get(id));
+const cardKeys  = ()         => cardTx('readonly',  (s) => s.getAllKeys());
+const cardAll   = ()         => cardTx('readonly',  (s) => s.getAll());
+const cardClear = ()         => cardTx('readwrite', (s) => s.clear());
+
+// Map a card filename to a movement id. Names are normalised (lowercase,
+// letters only) so "Tactical Pull Ups.png" matches "tacticalpullup".
+const CARD_ALIASES = {
+  abrollout: 'abrollout',
+  airsquats: 'airsquat',
+  bodyweightrows: 'row',
+  boxing: 'shadowbox',
+  cossacksquats: 'cossack',
+  dips: 'dips',
+  gobletcurls: 'gobletcurl',
+  hollowbodyhold: 'hollowhold',
+  jumprope: 'jumprope',
+  kettlebellhalos: 'kbhalo',
+  kettlebellswing: 'hinge',
+  lizardcrawl: 'lizardcrawl',
+  lunges: 'multilunge',
+  pikepushup: 'pikepushup',
+  precisionbroadjump: 'broadjump',
+  pushups: 'pushup',
+  running: 'run',
+  sprintdrills: 'sprints',
+  squatwalk: 'squatwalk',
+  tacticalpullups: 'tacticalpullup',
+};
+function matchCardName(filename) {
+  const base = filename.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, '');
+  const norm = base.toLowerCase().replace(/[^a-z]/g, '');
+  if (CARD_ALIASES[norm]) return CARD_ALIASES[norm];
+  // Fall back to a direct id match, then a singular/plural nudge.
+  if (byId(norm)) return norm;
+  const singular = norm.replace(/s$/, '');
+  if (CARD_ALIASES[singular]) return CARD_ALIASES[singular];
+  if (byId(singular)) return singular;
+  return null;
+}
+
+// Minimal ZIP reader: walks the central directory and inflates entries with
+// the browser's native DecompressionStream (no library needed).
+async function readZip(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(buf.buffer);
+  // Find the End Of Central Directory record (scan back from the tail).
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= 0 && i > buf.length - 66000; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a valid .zip file.');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+
+  const out = [];
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + commentLen;
+
+    if (name.endsWith('/')) continue;                 // directory entry
+    if (name.split('/').pop().startsWith('.')) continue; // __MACOSX / dotfiles
+    // Local header: data begins after its own name + extra fields.
+    const lNameLen = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const start = localOff + 30 + lNameLen + lExtraLen;
+    const raw = buf.subarray(start, start + compSize);
+
+    let data;
+    if (method === 0) {
+      data = raw;
+    } else if (method === 8) {
+      const ds = new DecompressionStream('deflate-raw');
+      const stream = new Blob([raw]).stream().pipeThrough(ds);
+      data = new Uint8Array(await new Response(stream).arrayBuffer());
+    } else {
+      continue; // unsupported compression — skip rather than fail the import
+    }
+    out.push({ name, blob: new Blob([data]) });
+  }
+  return out;
+}
+
+// Downscale a card so 23 A4/300dpi PNGs don't eat ~26 MB of device storage.
+async function shrinkImage(blob) {
+  const bmp = await createImageBitmap(blob);
+  const scale = Math.min(1, CARD_MAX_W / bmp.width);
+  const w = Math.round(bmp.width * scale);
+  const h = Math.round(bmp.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  bmp.close && bmp.close();
+  const type = 'image/webp';
+  const made = await new Promise((r) => canvas.toBlob(r, type, CARD_QUALITY));
+  // Safari/older engines may not support webp encoding — fall back to JPEG.
+  return made || await new Promise((r) => canvas.toBlob(r, 'image/jpeg', CARD_QUALITY));
+}
+
+// Import cards from either a .zip or a multi-select of image files.
+async function importCards(files) {
+  const status = document.getElementById('cardStatus');
+  const say = (t) => { if (status) { status.hidden = false; status.textContent = t; } };
+  try {
+    let entries = [];
+    for (const f of files) {
+      if (/\.zip$/i.test(f.name)) {
+        say('Reading zip…');
+        entries = entries.concat(await readZip(f));
+      } else if (/^image\//.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name)) {
+        entries.push({ name: f.name, blob: f });
+      }
+    }
+    if (!entries.length) { say('No images found in that file.'); return; }
+
+    let saved = 0, bytes = 0;
+    const unmatched = [];
+    for (let i = 0; i < entries.length; i++) {
+      const { name, blob } = entries[i];
+      const id = matchCardName(name);
+      if (!id) { unmatched.push(name.replace(/^.*\//, '')); continue; }
+      say(`Processing ${i + 1} of ${entries.length}…`);
+      const small = await shrinkImage(blob);
+      await cardPut(id, small);
+      saved++; bytes += small.size;
+    }
+    const mb = (bytes / 1048576).toFixed(1);
+    let msg = `Imported ${saved} card${saved === 1 ? '' : 's'} (${mb} MB).`;
+    if (unmatched.length) msg += ` Skipped ${unmatched.length} with no matching exercise: ${unmatched.join(', ')}.`;
+    say(msg);
+    refreshCardStatus(true);
+  } catch (err) {
+    say('Import failed: ' + (err && err.message ? err.message : 'unknown error'));
+  }
+}
+
+// Show the card for a movement in the log sheet (if one has been imported).
+// Object URLs are revoked as we go so repeated opens don't leak memory.
+let currentCardUrl = null;
+async function showCardFor(movementId) {
+  const wrap = document.getElementById('cardThumb');
+  const img = document.getElementById('cardThumbImg');
+  if (!wrap || !img) return;
+  if (currentCardUrl) { URL.revokeObjectURL(currentCardUrl); currentCardUrl = null; }
+  wrap.hidden = true;
+  if (!movementId || !('indexedDB' in window)) return;
+  try {
+    const blob = await cardGet(movementId);
+    if (!blob) return;
+    currentCardUrl = URL.createObjectURL(blob);
+    img.src = currentCardUrl;
+    wrap.hidden = false;
+  } catch { /* storage unavailable — just don't show a card */ }
+}
+
+function openCardViewer() {
+  const src = document.getElementById('cardThumbImg').src;
+  if (!src) return;
+  document.getElementById('cardViewerImg').src = src;
+  document.getElementById('cardViewer').hidden = false;
+}
+function closeCardViewer() { document.getElementById('cardViewer').hidden = true; }
+
+async function refreshCardStatus(keepMessage) {
+  const el = document.getElementById('cardCount');
+  if (!el) return;
+  try {
+    const blobs = await cardAll();
+    const bytes = blobs.reduce((s, b) => s + (b.size || 0), 0);
+    el.textContent = blobs.length
+      ? `${blobs.length} card${blobs.length === 1 ? '' : 's'} stored · ${(bytes / 1048576).toFixed(1)} MB`
+      : 'No cards imported yet';
+  } catch {
+    el.textContent = 'Card storage unavailable on this browser';
+  }
+  if (!keepMessage) {
+    const status = document.getElementById('cardStatus');
+    if (status) status.hidden = true;
+  }
+}
+
 // ---------- Settings ----------
 const settingsSheet = document.getElementById('settingsSheet');
 // Render the routine chips + blurb. Selecting is non-destructive: it only
@@ -1422,6 +1641,7 @@ function renderRoutineRow() {
 
 function openSettings() {
   renderRoutineRow();
+  refreshCardStatus();
   document.getElementById('setAutoRest').checked = SETTINGS.autoRest;
   document.getElementById('restLenInput').value = SETTINGS.restDefault;
   const row = document.getElementById('restLenRow');
@@ -1537,6 +1757,27 @@ function addReminderToCalendar() {
   URL.revokeObjectURL(url);
 }
 function closeSettings() { settingsSheet.hidden = true; }
+// ---- Exercise card wiring ----
+document.getElementById('cardThumb').onclick = openCardViewer;
+document.getElementById('cardViewerClose').onclick = closeCardViewer;
+document.getElementById('cardViewer').onclick = (e) => {
+  if (e.target.id === 'cardViewer') closeCardViewer(); // tap the backdrop to close
+};
+document.getElementById('importCardsBtn').onclick = () => document.getElementById('cardFile').click();
+document.getElementById('cardFile').onchange = (ev) => {
+  const files = [...ev.target.files];
+  ev.target.value = ''; // allow re-importing the same file later
+  if (files.length) importCards(files);
+};
+document.getElementById('clearCardsBtn').onclick = async () => {
+  if (!confirm('Remove all imported exercise cards from this device?')) return;
+  await cardClear();
+  await showCardFor(null);
+  refreshCardStatus();
+  const status = document.getElementById('cardStatus');
+  if (status) { status.hidden = false; status.textContent = 'All cards removed.'; }
+};
+
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('addReminder').onclick = addReminderToCalendar;
 document.getElementById('checkUpdate').onclick = checkForUpdate;
