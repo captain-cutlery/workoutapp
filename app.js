@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v23';
+const APP_VERSION = 'v24';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -79,87 +79,87 @@ const MOVEMENTS = [
   // in the suggested session when the SuperMover routine is selected, but are
   // always free-loggable from the Log tab.
   {
-    id: 'lizardcrawl', name: 'Lizard Crawl', emoji: '🦎', group: 'Push', type: 'time', range: [60, 60],
+    id: 'lizardcrawl', name: 'Lizard Crawl', emoji: '🦎', group: 'Push', type: 'time', range: [60, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Crawl along the floor low to the ground, chest close to the deck. Bring the knee out to the side toward the elbow as you reach forward with the opposite hand. Keep the hips low.',
     variations: ['On the spot', 'Forward crawl', 'Forward + reverse', 'Weighted vest'],
   },
   {
-    id: 'pikepushup', name: 'Pike Push-ups', emoji: '🔺', group: 'Push', type: 'reps', range: [15, 30],
+    id: 'pikepushup', name: 'Pike Push-ups', emoji: '🔺', group: 'Push', type: 'reps', range: [15, 30], style: 'supermover', rx: '3 × failure',
     cues: 'Hips high in a pike so the torso is close to vertical, then push through the shoulders. The closer to vertical, the more it targets the delts.',
     variations: ['Feet on floor', 'Feet elevated', 'Wall-assisted', 'Full handstand push-up'],
   },
   {
-    id: 'abrollout', name: 'Ab Roll-out', emoji: '🎡', group: 'Core', type: 'reps', range: [10, 25],
+    id: 'abrollout', name: 'Ab Roll-out', emoji: '🎡', group: 'Core', type: 'reps', range: [10, 25], style: 'supermover', rx: '3 × failure',
     cues: 'Hold the wheel with both hands and roll forward. Contract the core, hips and glutes to resist extension — never let the low back arch. Only go as far as you can control.',
     variations: ['From knees (short)', 'From knees (full)', 'Standing'],
   },
   {
-    id: 'gobletcurl', name: 'Goblet Curls', emoji: '🏋️', group: 'Pull', type: 'reps', range: [15, 30],
+    id: 'gobletcurl', name: 'Goblet Curls', emoji: '🏋️', group: 'Pull', type: 'reps', range: [15, 30], style: 'supermover', rx: '3 × failure',
     cues: 'Hold a kettlebell, dumbbell or heavy rucksack in both hands and curl upwards. Increase or decrease the weight to adjust difficulty.',
     variations: ['Light', 'Moderate', 'Heavy'],
   },
   {
-    id: 'tacticalpullup', name: 'Tactical Pull-ups', emoji: '🪖', group: 'Pull', type: 'reps', range: [8, 20],
+    id: 'tacticalpullup', name: 'Tactical Pull-ups', emoji: '🪖', group: 'Pull', type: 'reps', range: [8, 20], style: 'supermover', rx: '3 × failure',
     cues: 'Grab the bar and pull explosively so your thumbs meet the top — as though hauling yourself over a ledge. Keep the torso straight and lower under control.',
     variations: ['Band-assisted', 'Standard', 'Explosive', 'Weighted'],
   },
   {
-    id: 'multilunge', name: 'Multi-directional Lunge', emoji: '🧭', group: 'Legs', type: 'reps', range: [10, 20],
+    id: 'multilunge', name: 'Multi-directional Lunge', emoji: '🧭', group: 'Legs', type: 'reps', range: [10, 20], style: 'supermover', rx: '2 × 10 each direction',
     cues: 'Lunge in three directions — forward, to the side, and backwards. Great for hip mobility, balance and strength through multiple planes.',
     variations: ['Bodyweight', 'Slow tempo', 'Weighted'],
   },
   {
-    id: 'squatwalk', name: 'Squat Walks', emoji: '🦆', group: 'Legs', type: 'time', range: [60, 60],
+    id: 'squatwalk', name: 'Squat Walks', emoji: '🦆', group: 'Legs', type: 'time', range: [60, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Drop into a deep squat and walk forward while staying down. Builds strength endurance and mobility in the legs. Make a game of it — squat-walk to fetch something.',
     variations: ['Short distance', 'Continuous 1 min', 'Weighted'],
   },
   {
-    id: 'broadjump', name: 'Precision Broad Jumps', emoji: '🐸', group: 'Legs', type: 'reps', range: [10, 20],
+    id: 'broadjump', name: 'Precision Broad Jumps', emoji: '🐸', group: 'Legs', type: 'reps', range: [10, 20], style: 'supermover', rx: '3 × 10',
     cues: 'A precision jump: aim to land on a target, not just as far as you can. Swing the arms and jump from one foot position to another. Land gently on the balls of the feet to absorb impact.',
     variations: ['Floor targets', 'Onto a low box', 'Longer distance'],
   },
   {
-    id: 'kbhalo', name: 'Kettlebell Halos', emoji: '💫', group: 'Push', type: 'reps', range: [15, 20],
+    id: 'kbhalo', name: 'Kettlebell Halos', emoji: '💫', group: 'Push', type: 'reps', range: [15, 20], style: 'supermover', rx: '2 × 15',
     cues: 'Hold a kettlebell by the horns, bring it past the right ear, behind the head, and back to the start. Circle one way then reverse. Great shoulder mobility work.',
     variations: ['Light', 'Moderate', 'Heavy'],
   },
   {
-    id: 'hollowhold', name: 'Hollow Body Hold', emoji: '🌙', group: 'Core', type: 'time', range: [30, 60],
+    id: 'hollowhold', name: 'Hollow Body Hold', emoji: '🌙', group: 'Core', type: 'time', range: [30, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Lie on your back, legs straight and arms overhead. Contract the core so the lower back touches the ground and the shoulders and legs lift — a slight concave shape. Hold.',
     variations: ['Tuck', 'One leg extended', 'Full hollow', 'Hollow rocks'],
   },
   {
-    id: 'cossack', name: 'Cossack Squats', emoji: '↔️', group: 'Legs', type: 'reps', range: [5, 15],
+    id: 'cossack', name: 'Cossack Squats', emoji: '↔️', group: 'Legs', type: 'reps', range: [5, 15], style: 'supermover', rx: '2 × 5',
     cues: 'Squat down over one leg with the other extended out to the side, foot flat. Keep the extended leg straight and the chest up. Excellent for hip adductors and deep mobility.',
     variations: ['Assisted / heel raised', 'Bodyweight', 'Weighted'],
   },
   {
-    id: 'airsquat', name: 'Air Squats', emoji: '🪑', group: 'Legs', type: 'reps', range: [30, 50],
+    id: 'airsquat', name: 'Air Squats', emoji: '🪑', group: 'Legs', type: 'reps', range: [30, 50], style: 'supermover', rx: '3 × 50',
     cues: 'Feet shoulder-width, toes slightly out. Squat until the thighs are at least parallel, then return to standing. Keep the back straight. High-rep conditioning.',
     variations: ['Bodyweight', 'Fast cadence', 'Weighted vest'],
   },
   {
-    id: 'sprints', name: 'Sprint Drills', emoji: '💨', group: 'Cardio', type: 'reps', range: [5, 10],
+    id: 'sprints', name: 'Sprint Drills', emoji: '💨', group: 'Cardio', type: 'reps', range: [5, 10], style: 'supermover', rx: '5 × 100m',
     cues: 'Mark out ~100 metres and sprint to the end, walk back, repeat. Log one rep per sprint. Builds immense power and reinforces one of the most important human movement patterns.',
     variations: ['60m', '100m', 'Hill sprints'],
   },
   {
-    id: 'jumprope', name: 'Jump Rope', emoji: '🪢', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'jumprope', name: 'Jump Rope', emoji: '🪢', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '1 × 10 min',
     cues: 'Small hops, minimal impact, arms close to the sides — rotate the rope from the wrists, not the shoulders. Keep a subtle hollow-body tension. No rope? Mime it.',
     variations: ['Basic bounce', 'Crossovers', 'Double unders'],
   },
   {
-    id: 'shadowbox', name: 'Shadow Boxing', emoji: '🥊', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'shadowbox', name: 'Shadow Boxing', emoji: '🥊', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '1 × 10 min',
     cues: 'Hands up in guard, punch from the hip and turn the fist over. Stay relaxed, never lock out the elbow. Throw kicks too — roundhouses open the hips and get you rotating. Work both sides.',
     variations: ['Shadow boxing', 'Heavy bag', 'With kicks'],
   },
   {
-    id: 'run', name: 'Run', emoji: '🏃', group: 'Warm-up', type: 'time', range: [900, 900],
+    id: 'run', name: 'Run', emoji: '🏃', group: 'Warm-up', type: 'time', range: [900, 900], style: 'supermover', rx: '1 × 15 min',
     cues: 'A short run at a gentle pace to get the blood flowing and settle into cadence. Stay relaxed and focus on gait mechanics rather than speed or distance.',
     variations: ['Easy pace', 'Off-road', 'Minimal shoes'],
   },
   {
-    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '10 min',
     cues: 'Ten minutes of flowing, exploratory movement — rotate the spine, open the hips, move through positions slowly and continuously. Mobility through motion rather than static stretching.',
     variations: ['Ground flow', 'Standing flow', 'Free movement'],
   },
@@ -232,6 +232,15 @@ const ROUTINES = {
     name: 'SuperMover',
     blurb: 'The Bioneer’s SuperMover split. High reps, rapid cadence, sets to failure, ~1 min rest between sets.',
     repStyle: 'supermover',
+    // Prescriptions for movements SHARED with the Recommended Routine, so they
+    // show the book's numbers while SuperMover is active instead of RR's 8–12.
+    // (SuperMover-only movements carry their own `rx` on the movement itself.)
+    rx: {
+      dips:   '3 × failure',
+      pushup: '3 × failure',
+      row:    '3 × failure',
+      hinge:  '3 × 50 (kettlebell swing)',
+    },
     // 0=Sun … 6=Sat
     days: [
       { label: 'Rest', rest: true, items: [] },
@@ -728,15 +737,33 @@ function openSheet(mvId, editId) {
   //   rr         — 3×8–12 at failure − 1, advance the variation at the top.
   //   supermover — high reps, rapid cadence, sets to failure, ~1 min rest,
   //                progress by adding reps rather than changing variation.
+  // The effort label is programme-specific too: RR stops shy of failure,
+  // SuperMover deliberately takes sets to failure.
+  const effortLabel = document.getElementById('effortLabel');
+  if (effortLabel) {
+    effortLabel.textContent = (m.style === 'supermover' || activeRoutine().repStyle === 'supermover')
+      ? 'Effort — SuperMover takes most sets to failure'
+      : 'Effort — stop a couple reps shy of failure';
+  }
+
   const ph = document.getElementById('progressHint');
   if (!editId && !isBike && m.range) {
     const isHold = m.type === 'time';
     const [lo, hi] = m.range;
-    const superMover = activeRoutine().repStyle === 'supermover';
+    // A movement that only exists in SuperMover always shows SuperMover
+    // guidance, whichever routine is active — otherwise a SuperMover-only
+    // exercise would show RR wording that doesn't apply to it. Movements shared
+    // by both programmes (push-ups, dips, rows, hinge) follow the active routine.
+    const superMover = m.style === 'supermover' || activeRoutine().repStyle === 'supermover';
     let txt;
 
     if (superMover) {
-      const target = isHold ? `3 × ${hi >= 60 ? Math.round(hi / 60) + ' min' : hi + 's'}` : `3 × ${lo}–${hi}`;
+      // Prefer the book's own prescription: a routine-level override for shared
+      // movements first, then the movement's own, then the computed range.
+      const r = activeRoutine();
+      const routineRx = r.repStyle === 'supermover' ? (r.rx || {})[m.id] : null;
+      const target = routineRx || m.rx
+        || (isHold ? `3 × ${hi >= 60 ? Math.round(hi / 60) + ' min' : hi + 's'}` : `3 × ${lo}–${hi}`);
       const advice = isHold
         ? 'hold the full time with quality, then add a set or load'
         : 'take each set close to failure, then simply add reps next time';
