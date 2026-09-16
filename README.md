@@ -108,7 +108,16 @@ Plus the SuperMover additions (see Routines): Lizard Crawl · Pike Push-ups ·
 Ab Roll-out · Goblet Curls · Tactical Pull-ups · Multi-directional Lunge ·
 Squat Walks · Precision Broad Jumps · Kettlebell Halos · Hollow Body Hold ·
 Cossack Squats · Air Squats · Sprint Drills · Jump Rope · Shadow Boxing ·
-Run · Liquid Motion.
+Run · Liquid Motion · Hindu Squats · Step Up.
+
+The SuperMover sessions are transcribed from the book's own "The SuperMover
+Workout" text listing, which is authoritative — the illustrated exercise cards
+are a slightly different selection. Liquid Motion is the 8-movement mobility
+flow (30s each, continuous movement, 2–3 rounds), not a generic 10-minute
+block; its order and naming follow the official Liquid Motion cheat-sheet card
+(prayer squat, roundhouse stretch, shoulder dislocates, crab reach, elephant
+walk, lateral gorilla crawl, V-W stretch, sofa hip flexor stretch). The
+cheat sheet itself imports like any other card — name it `Liquid Motion.png`.
 
 ---
 
@@ -123,8 +132,8 @@ switching is non-destructive and instantly reversible.
   (3×8–12 at failure − 1, advance the variation at the top of the range).
 - **`supermover` — SuperMover (The Bioneer), "workout-only" split.** A
   weekday-based routine: Mon Push · Tue Pull · Wed/Thu rest · Fri Legs ·
-  Sat Full Body · Sun rest, each training day finishing with 10 min Liquid
-  Motion. Rep guidance switches to SuperMover's style: high reps, rapid
+  Sat Full Body · Sun rest. Each training day starts with a warm-up (choose one
+  of jump rope / shadow boxing / run) and finishes with the Liquid Motion flow. Rep guidance switches to SuperMover's style: high reps, rapid
   cadence, sets to failure, ~1 min rest, progress by *adding reps* rather than
   advancing a variation.
 
@@ -139,8 +148,8 @@ would serve them at a public URL). Instead the user imports their own copy:
   library. Images are downscaled (max 1200px wide, WebP q85) and stored in
   **IndexedDB** (`cal_cards`), keyed by movement id. Nothing is uploaded.
 - Filenames map to movement ids via `CARD_ALIASES` + `matchCardName()`.
-  20 of the 23 supplied cards map; Hindu Squats, Step Up and Pseudo-Planche
-  Push-ups have no matching movement and are reported as skipped.
+  22 of the 23 supplied cards map. Only Pseudo-Planche Push-ups is unmatched
+  (an "Extras" card, not part of the main programme); it is reported as skipped.
 - A stored card appears under the form cues in the log sheet, tap to enlarge.
 - **Remove all cards** clears the store. Cards survive app updates but are
   wiped by "clear site data" (as is the log — export first).
