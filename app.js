@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v25';
+const APP_VERSION = 'v26';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -243,13 +243,13 @@ const ROUTINES = {
     },
     // 0=Sun … 6=Sat
     days: [
-      { label: 'Rest', rest: true, items: [] },
-      { label: 'Push day',      items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
-      { label: 'Pull day',      items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
-      { label: 'Rest', rest: true, items: [] },
-      { label: 'Rest', rest: true, items: [] },
-      { label: 'Leg day',       items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
-      { label: 'Full body',     items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
+      { label: 'Rest', short: 'Rest', rest: true, items: [] },
+      { label: 'Push day',  short: 'Push', items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
+      { label: 'Pull day',  short: 'Pull', items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
+      { label: 'Rest', short: 'Rest', rest: true, items: [] },
+      { label: 'Rest', short: 'Rest', rest: true, items: [] },
+      { label: 'Leg day',   short: 'Legs', items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
+      { label: 'Full body', short: 'Full', items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
     ],
   },
 };
@@ -394,6 +394,10 @@ function renderToday() {
   html += `<div class="section-row"><div class="section-title">${editable ? 'Suggested session' : plan.label}</div>`
     + (editable ? `<button id="editSession" class="link-btn">Edit</button>` : `<span class="routine-badge">${routine.name}</span>`)
     + `</div>`;
+
+  // For weekday-based routines show the week at a glance, so it's obvious which
+  // routine is active and what's coming up — including on rest days.
+  html += weekOverviewHtml(routine);
 
   if (plan.rest) {
     html += `<div class="card rest-card">😴 <b>Rest day.</b> Recovery is when you actually get stronger —
@@ -1621,9 +1625,27 @@ async function refreshCardStatus(keepMessage) {
 const settingsSheet = document.getElementById('settingsSheet');
 // Render the routine chips + blurb. Selecting is non-destructive: it only
 // changes what Today suggests, so you can switch back at any time.
+// A compact "Mon Push · Tue Pull · …" overview for weekday-based routines, with
+// today highlighted. Shown in Settings (as a preview) and on Today, so the
+// routine is visible even on a rest day.
+function weekOverviewHtml(routine) {
+  if (!routine.days) return '';
+  const names = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  const today = new Date().getDay();
+  return `<div class="wk-plan">` + routine.days.map((d, i) =>
+    `<div class="wk-plan-day${i === today ? ' is-today' : ''}${d.rest ? ' is-rest' : ''}">
+       <b>${names[i]}</b><span>${d.short || d.label}</span></div>`).join('') + `</div>`;
+}
+
 function renderRoutineRow() {
   const row = document.getElementById('routineRow');
   const blurb = document.getElementById('routineBlurb');
+  const preview = document.getElementById('routinePreview');
+  const paint = (key) => {
+    const r = ROUTINES[key] || ROUTINES.rr;
+    blurb.textContent = r.blurb;
+    if (preview) preview.innerHTML = weekOverviewHtml(r);
+  };
   row.innerHTML = '';
   for (const [key, r] of Object.entries(ROUTINES)) {
     const c = document.createElement('button');
@@ -1632,11 +1654,16 @@ function renderRoutineRow() {
     c.dataset.routine = key;
     c.onclick = () => {
       row.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
-      blurb.textContent = r.blurb;
+      // Apply immediately — switching is non-destructive and reversible, and
+      // waiting for Save made it look like the toggle did nothing.
+      SETTINGS.routine = key;
+      saveSettings(SETTINGS);
+      paint(key);
+      render();
     };
     row.appendChild(c);
   }
-  blurb.textContent = (ROUTINES[SETTINGS.routine] || ROUTINES.rr).blurb;
+  paint(SETTINGS.routine);
 }
 
 function openSettings() {
