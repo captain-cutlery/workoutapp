@@ -104,6 +104,41 @@ Ladders follow the RR progression guides (e.g. push-ups: Vertical → Incline �
 Full → Diamond → Pseudo-planche → Rings → RTO). *(L-sit, calf raises and
 handstand were intentionally removed per preference.)*
 
+Plus the SuperMover additions (see Routines): Lizard Crawl · Pike Push-ups ·
+Ab Roll-out · Goblet Curls · Tactical Pull-ups · Multi-directional Lunge ·
+Squat Walks · Precision Broad Jumps · Kettlebell Halos · Hollow Body Hold ·
+Cossack Squats · Air Squats · Sprint Drills · Jump Rope · Shadow Boxing ·
+Run · Liquid Motion.
+
+---
+
+## Routines
+
+The **Today** tab is driven by a routine, chosen in **Settings → Routine**.
+Routines only decide what Today *suggests* — they never touch the log, so
+switching is non-destructive and instantly reversible.
+
+- **`rr` — Recommended Routine (default).** The original behaviour: one
+  editable full-body session (stored under `cal_session_v1`), RR rep guidance
+  (3×8–12 at failure − 1, advance the variation at the top of the range).
+- **`supermover` — SuperMover (The Bioneer), "workout-only" split.** A
+  weekday-based routine: Mon Push · Tue Pull · Wed/Thu rest · Fri Legs ·
+  Sat Full Body · Sun rest, each training day finishing with 10 min Liquid
+  Motion. Rep guidance switches to SuperMover's style: high reps, rapid
+  cadence, sets to failure, ~1 min rest, progress by *adding reps* rather than
+  advancing a variation.
+
+Implementation notes for a future session:
+- `ROUTINES` registry in `app.js`; `SETTINGS.routine` defaults to `'rr'`.
+- A routine with a `days[]` array is weekday-based (indexed by `getDay()`,
+  0 = Sunday) and renders a rest-day card on rest days; a routine without
+  `days[]` uses the user's editable `SESSION`.
+- `todaysPlan()` returns `{ label, rest, items }` and is the single place Today
+  asks what to show. `activeRoutine().repStyle` drives the rep guidance.
+- New movements are appended to `MOVEMENTS`; the Log tab buckets by `group`
+  (see `GROUP_ORDER`) rather than array order, so appending is safe.
+- An unknown/removed routine id falls back to `rr`.
+
 ---
 
 ## Install on Android
@@ -171,6 +206,9 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
 - **v20** — PARA-format Obsidian export + single-note "Today → vault" export.
 - **v21** — match export to the user's real (lean) note frontmatter.
 - **v22** — finalise export tags (`area, Fitness, workout, calisthenics`).
+- **v23** — routine switcher: added The Bioneer's SuperMover split
+  (workout-only schedule) alongside the Recommended Routine, with day-aware
+  Today, SuperMover rep guidance, and 17 new movements. RR remains default.
 
 ## Obsidian / PARA export & Syncthing workflow
 
