@@ -114,6 +114,9 @@ body {
 .wk-plan-day.is-today { border-color: var(--accent); background: var(--accent-dim); }
 .wk-plan-day.is-today b { color: var(--text); }
 
+/* Warm-up / day note above the session list */
+.day-note { background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 10px; padding: 9px 12px; font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+
 /* Rest-day card */
 .rest-card { color: var(--muted); font-size: 14px; line-height: 1.5; }
 .rest-card b { color: var(--text); }

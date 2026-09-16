@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v26';
+const APP_VERSION = 'v27';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -159,9 +159,19 @@ const MOVEMENTS = [
     variations: ['Easy pace', 'Off-road', 'Minimal shoes'],
   },
   {
-    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '10 min',
-    cues: 'Ten minutes of flowing, exploratory movement — rotate the spine, open the hips, move through positions slowly and continuously. Mobility through motion rather than static stretching.',
-    variations: ['Ground flow', 'Standing flow', 'Free movement'],
+    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Mobility', type: 'time', range: [30, 30], style: 'supermover', rx: '30s each · 2–3 rounds',
+    cues: 'The Liquid Motion mobility flow — 30 seconds each, 2–3 rounds: prayer squat, shoulder dislocates, crab reach, elephant walks, V-W stretch, roundhouse kick stretch, hip flexor stretch, lateral gorilla walk. Move gently up, down and around each position rather than holding still.',
+    variations: ['Prayer squat', 'Shoulder dislocates', 'Crab reach', 'Elephant walks', 'V-W stretch', 'Roundhouse kick stretch', 'Hip flexor stretch', 'Lateral gorilla walk'],
+  },
+  {
+    id: 'hindusquat', name: 'Hindu Squats', emoji: '🙏', group: 'Legs', type: 'reps', range: [30, 50], style: 'supermover', rx: '3 × failure',
+    cues: 'A continuous, flowing squat: sweep the arms back and rise onto the balls of the feet as you descend, then drive up and pull the arms through. High-rep conditioning for the quads. (SuperMover alternative to precision broad jumps.)',
+    variations: ['Partial range', 'Full Hindu squat', 'Fast cadence'],
+  },
+  {
+    id: 'stepup', name: 'Step Up', emoji: '🪜', group: 'Legs', type: 'reps', range: [10, 15], style: 'supermover', rx: '3 × 10 (RPE 8)',
+    cues: 'Step onto a box or bench and drive through the front heel, controlling the way back down. Keep the torso upright. Pick a height or load that leaves you around RPE 8. (SuperMover alternative to kettlebell swings.)',
+    variations: ['Low box', 'Knee-height box', 'Weighted', 'Deep step-up'],
   },
 ];
 
@@ -192,35 +202,41 @@ const DEFAULT_SESSION = [
 // 'supermover' : The Bioneer's SuperMover, "workout-only" weekly split.
 //                days[] is indexed by JS getDay() — 0 = Sunday.
 
+// Transcribed from the book's own "The SuperMover Workout" listing (which is
+// the authoritative one — the illustrated exercise cards are a slightly
+// different selection). "1 Minute Rest Between Each Exercise".
 const SUPERMOVER_PUSH = [
-  { id: 'dips',        target: '3 × failure · rapid cadence' },
+  { id: 'dips',        target: '3 × failure' },
   { id: 'lizardcrawl', target: '3 × 1 min' },
-  { id: 'pushup',      target: '3 × failure · rapid cadence' },
   { id: 'pikepushup',  target: '3 × failure' },
+  { id: 'pushup',      target: '3 × failure' },
 ];
 const SUPERMOVER_PULL = [
   { id: 'row',            target: '3 × failure' },
-  { id: 'abrollout',      target: '3 × failure' },
   { id: 'gobletcurl',     target: '3 × failure' },
-  { id: 'tacticalpullup', target: '3 × failure' },
+  { id: 'abrollout',      target: '3 × failure' },
+  { id: 'tacticalpullup', target: '3 × failure — or Hollow Body 3 × 1 min' },
 ];
 const SUPERMOVER_LEGS = [
-  { id: 'multilunge', target: '2 × 10 each direction' },
+  { id: 'multilunge', target: '2 × 10' },
   { id: 'squatwalk',  target: '3 × 1 min' },
-  { id: 'broadjump',  target: '3 × 10' },
-  { id: 'hinge',      target: '3 × 50 · kettlebell swing' },
+  { id: 'broadjump',  target: '3 × 10 — or Hindu Squats 3 × failure' },
+  { id: 'hinge',      target: '3 × 50 kettlebell swing (optional)' },
 ];
 const SUPERMOVER_FULL = [
-  { id: 'pushup',     target: '3 × failure' },
-  { id: 'hinge',      target: '3 × 50 · kettlebell swing' },
-  { id: 'gobletcurl', target: '3 × failure' },
+  { id: 'dips',       target: '3 × failure' },
+  { id: 'hinge',      target: '3 × 50 kettlebell swing — or Step Up 3 × 10 (RPE 8)' },
   { id: 'hollowhold', target: '3 × 1 min' },
-  { id: 'kbhalo',     target: '2 × 15' },
-  { id: 'row',        target: '3 × 10' },
+  { id: 'pikepushup', target: '3 × failure — or KB Halos 2 × 15' },
+  { id: 'gobletcurl', target: '3 × failure' },
+  { id: 'row',        target: '3 × failure' },
   { id: 'squatwalk',  target: '3 × 1 min' },
 ];
-// Every SuperMover training day finishes with 10 minutes of Liquid Motion.
-const SUPERMOVER_FINISHER = [{ id: 'liquidmotion', target: '10 min' }];
+// Every SuperMover training day finishes with the Liquid Motion mobility flow.
+const SUPERMOVER_FINISHER = [{ id: 'liquidmotion', target: '30s each · 2–3 rounds' }];
+// Warm up with ONE of these before the workout (shown as a note, and each is
+// loggable from the Log tab).
+const SUPERMOVER_WARMUP = 'Warm up — choose one: Jump Rope 10 min · Shadow Boxing 10 min · Run 15 min';
 
 const ROUTINES = {
   rr: {
@@ -244,12 +260,12 @@ const ROUTINES = {
     // 0=Sun … 6=Sat
     days: [
       { label: 'Rest', short: 'Rest', rest: true, items: [] },
-      { label: 'Push day',  short: 'Push', items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
-      { label: 'Pull day',  short: 'Pull', items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
+      { label: 'Push day',  short: 'Push', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
+      { label: 'Pull day',  short: 'Pull', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
       { label: 'Rest', short: 'Rest', rest: true, items: [] },
       { label: 'Rest', short: 'Rest', rest: true, items: [] },
-      { label: 'Leg day',   short: 'Legs', items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
-      { label: 'Full body', short: 'Full', items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
+      { label: 'Leg day',   short: 'Legs', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
+      { label: 'Full body', short: 'Full', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
     ],
   },
 };
@@ -260,9 +276,9 @@ const activeRoutine = () => ROUTINES[SETTINGS.routine] || ROUTINES.rr;
 // weekday's session for a day-based routine. Returns { label, rest, items }.
 function todaysPlan() {
   const r = activeRoutine();
-  if (!r.days) return { label: 'Suggested session', rest: false, items: SESSION };
+  if (!r.days) return { label: 'Suggested session', rest: false, items: SESSION, note: '' };
   const d = r.days[new Date().getDay()] || { label: 'Rest', rest: true, items: [] };
-  return { label: d.label, rest: !!d.rest, items: d.items };
+  return { label: d.label, rest: !!d.rest, items: d.items, note: d.note || '' };
 }
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
@@ -403,6 +419,7 @@ function renderToday() {
     html += `<div class="card rest-card">😴 <b>Rest day.</b> Recovery is when you actually get stronger —
       take it. You can still free-log anything from the Log tab.</div>`;
   } else {
+    if (plan.note) html += `<div class="day-note">${plan.note}</div>`;
     for (const s of plan.items) {
       const m = byId(s.id);
       if (!m) continue;
@@ -425,7 +442,7 @@ function renderToday() {
 // Display order for the Log tab's group headings. Movements are bucketed by
 // group rather than relying on array order, so new movements can be appended
 // anywhere in MOVEMENTS without producing duplicate headings.
-const GROUP_ORDER = ['Warm-up', 'Push', 'Pull', 'Legs', 'Hinge', 'Core', 'Cardio'];
+const GROUP_ORDER = ['Warm-up', 'Push', 'Pull', 'Legs', 'Hinge', 'Core', 'Cardio', 'Mobility'];
 
 function renderLog() {
   topTitle.textContent = 'Log anything';
@@ -1461,6 +1478,8 @@ const CARD_ALIASES = {
   sprintdrills: 'sprints',
   squatwalk: 'squatwalk',
   tacticalpullups: 'tacticalpullup',
+  hindusquats: 'hindusquat',
+  stepup: 'stepup',
 };
 function matchCardName(filename) {
   const base = filename.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, '');
