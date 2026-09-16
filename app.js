@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v23';
+const APP_VERSION = 'v25';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -79,87 +79,87 @@ const MOVEMENTS = [
   // in the suggested session when the SuperMover routine is selected, but are
   // always free-loggable from the Log tab.
   {
-    id: 'lizardcrawl', name: 'Lizard Crawl', emoji: '🦎', group: 'Push', type: 'time', range: [60, 60],
+    id: 'lizardcrawl', name: 'Lizard Crawl', emoji: '🦎', group: 'Push', type: 'time', range: [60, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Crawl along the floor low to the ground, chest close to the deck. Bring the knee out to the side toward the elbow as you reach forward with the opposite hand. Keep the hips low.',
     variations: ['On the spot', 'Forward crawl', 'Forward + reverse', 'Weighted vest'],
   },
   {
-    id: 'pikepushup', name: 'Pike Push-ups', emoji: '🔺', group: 'Push', type: 'reps', range: [15, 30],
+    id: 'pikepushup', name: 'Pike Push-ups', emoji: '🔺', group: 'Push', type: 'reps', range: [15, 30], style: 'supermover', rx: '3 × failure',
     cues: 'Hips high in a pike so the torso is close to vertical, then push through the shoulders. The closer to vertical, the more it targets the delts.',
     variations: ['Feet on floor', 'Feet elevated', 'Wall-assisted', 'Full handstand push-up'],
   },
   {
-    id: 'abrollout', name: 'Ab Roll-out', emoji: '🎡', group: 'Core', type: 'reps', range: [10, 25],
+    id: 'abrollout', name: 'Ab Roll-out', emoji: '🎡', group: 'Core', type: 'reps', range: [10, 25], style: 'supermover', rx: '3 × failure',
     cues: 'Hold the wheel with both hands and roll forward. Contract the core, hips and glutes to resist extension — never let the low back arch. Only go as far as you can control.',
     variations: ['From knees (short)', 'From knees (full)', 'Standing'],
   },
   {
-    id: 'gobletcurl', name: 'Goblet Curls', emoji: '🏋️', group: 'Pull', type: 'reps', range: [15, 30],
+    id: 'gobletcurl', name: 'Goblet Curls', emoji: '🏋️', group: 'Pull', type: 'reps', range: [15, 30], style: 'supermover', rx: '3 × failure',
     cues: 'Hold a kettlebell, dumbbell or heavy rucksack in both hands and curl upwards. Increase or decrease the weight to adjust difficulty.',
     variations: ['Light', 'Moderate', 'Heavy'],
   },
   {
-    id: 'tacticalpullup', name: 'Tactical Pull-ups', emoji: '🪖', group: 'Pull', type: 'reps', range: [8, 20],
+    id: 'tacticalpullup', name: 'Tactical Pull-ups', emoji: '🪖', group: 'Pull', type: 'reps', range: [8, 20], style: 'supermover', rx: '3 × failure',
     cues: 'Grab the bar and pull explosively so your thumbs meet the top — as though hauling yourself over a ledge. Keep the torso straight and lower under control.',
     variations: ['Band-assisted', 'Standard', 'Explosive', 'Weighted'],
   },
   {
-    id: 'multilunge', name: 'Multi-directional Lunge', emoji: '🧭', group: 'Legs', type: 'reps', range: [10, 20],
+    id: 'multilunge', name: 'Multi-directional Lunge', emoji: '🧭', group: 'Legs', type: 'reps', range: [10, 20], style: 'supermover', rx: '2 × 10 each direction',
     cues: 'Lunge in three directions — forward, to the side, and backwards. Great for hip mobility, balance and strength through multiple planes.',
     variations: ['Bodyweight', 'Slow tempo', 'Weighted'],
   },
   {
-    id: 'squatwalk', name: 'Squat Walks', emoji: '🦆', group: 'Legs', type: 'time', range: [60, 60],
+    id: 'squatwalk', name: 'Squat Walks', emoji: '🦆', group: 'Legs', type: 'time', range: [60, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Drop into a deep squat and walk forward while staying down. Builds strength endurance and mobility in the legs. Make a game of it — squat-walk to fetch something.',
     variations: ['Short distance', 'Continuous 1 min', 'Weighted'],
   },
   {
-    id: 'broadjump', name: 'Precision Broad Jumps', emoji: '🐸', group: 'Legs', type: 'reps', range: [10, 20],
+    id: 'broadjump', name: 'Precision Broad Jumps', emoji: '🐸', group: 'Legs', type: 'reps', range: [10, 20], style: 'supermover', rx: '3 × 10',
     cues: 'A precision jump: aim to land on a target, not just as far as you can. Swing the arms and jump from one foot position to another. Land gently on the balls of the feet to absorb impact.',
     variations: ['Floor targets', 'Onto a low box', 'Longer distance'],
   },
   {
-    id: 'kbhalo', name: 'Kettlebell Halos', emoji: '💫', group: 'Push', type: 'reps', range: [15, 20],
+    id: 'kbhalo', name: 'Kettlebell Halos', emoji: '💫', group: 'Push', type: 'reps', range: [15, 20], style: 'supermover', rx: '2 × 15',
     cues: 'Hold a kettlebell by the horns, bring it past the right ear, behind the head, and back to the start. Circle one way then reverse. Great shoulder mobility work.',
     variations: ['Light', 'Moderate', 'Heavy'],
   },
   {
-    id: 'hollowhold', name: 'Hollow Body Hold', emoji: '🌙', group: 'Core', type: 'time', range: [30, 60],
+    id: 'hollowhold', name: 'Hollow Body Hold', emoji: '🌙', group: 'Core', type: 'time', range: [30, 60], style: 'supermover', rx: '3 × 1 min',
     cues: 'Lie on your back, legs straight and arms overhead. Contract the core so the lower back touches the ground and the shoulders and legs lift — a slight concave shape. Hold.',
     variations: ['Tuck', 'One leg extended', 'Full hollow', 'Hollow rocks'],
   },
   {
-    id: 'cossack', name: 'Cossack Squats', emoji: '↔️', group: 'Legs', type: 'reps', range: [5, 15],
+    id: 'cossack', name: 'Cossack Squats', emoji: '↔️', group: 'Legs', type: 'reps', range: [5, 15], style: 'supermover', rx: '2 × 5',
     cues: 'Squat down over one leg with the other extended out to the side, foot flat. Keep the extended leg straight and the chest up. Excellent for hip adductors and deep mobility.',
     variations: ['Assisted / heel raised', 'Bodyweight', 'Weighted'],
   },
   {
-    id: 'airsquat', name: 'Air Squats', emoji: '🪑', group: 'Legs', type: 'reps', range: [30, 50],
+    id: 'airsquat', name: 'Air Squats', emoji: '🪑', group: 'Legs', type: 'reps', range: [30, 50], style: 'supermover', rx: '3 × 50',
     cues: 'Feet shoulder-width, toes slightly out. Squat until the thighs are at least parallel, then return to standing. Keep the back straight. High-rep conditioning.',
     variations: ['Bodyweight', 'Fast cadence', 'Weighted vest'],
   },
   {
-    id: 'sprints', name: 'Sprint Drills', emoji: '💨', group: 'Cardio', type: 'reps', range: [5, 10],
+    id: 'sprints', name: 'Sprint Drills', emoji: '💨', group: 'Cardio', type: 'reps', range: [5, 10], style: 'supermover', rx: '5 × 100m',
     cues: 'Mark out ~100 metres and sprint to the end, walk back, repeat. Log one rep per sprint. Builds immense power and reinforces one of the most important human movement patterns.',
     variations: ['60m', '100m', 'Hill sprints'],
   },
   {
-    id: 'jumprope', name: 'Jump Rope', emoji: '🪢', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'jumprope', name: 'Jump Rope', emoji: '🪢', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '1 × 10 min',
     cues: 'Small hops, minimal impact, arms close to the sides — rotate the rope from the wrists, not the shoulders. Keep a subtle hollow-body tension. No rope? Mime it.',
     variations: ['Basic bounce', 'Crossovers', 'Double unders'],
   },
   {
-    id: 'shadowbox', name: 'Shadow Boxing', emoji: '🥊', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'shadowbox', name: 'Shadow Boxing', emoji: '🥊', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '1 × 10 min',
     cues: 'Hands up in guard, punch from the hip and turn the fist over. Stay relaxed, never lock out the elbow. Throw kicks too — roundhouses open the hips and get you rotating. Work both sides.',
     variations: ['Shadow boxing', 'Heavy bag', 'With kicks'],
   },
   {
-    id: 'run', name: 'Run', emoji: '🏃', group: 'Warm-up', type: 'time', range: [900, 900],
+    id: 'run', name: 'Run', emoji: '🏃', group: 'Warm-up', type: 'time', range: [900, 900], style: 'supermover', rx: '1 × 15 min',
     cues: 'A short run at a gentle pace to get the blood flowing and settle into cadence. Stay relaxed and focus on gait mechanics rather than speed or distance.',
     variations: ['Easy pace', 'Off-road', 'Minimal shoes'],
   },
   {
-    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600],
+    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600], style: 'supermover', rx: '10 min',
     cues: 'Ten minutes of flowing, exploratory movement — rotate the spine, open the hips, move through positions slowly and continuously. Mobility through motion rather than static stretching.',
     variations: ['Ground flow', 'Standing flow', 'Free movement'],
   },
@@ -232,6 +232,15 @@ const ROUTINES = {
     name: 'SuperMover',
     blurb: 'The Bioneer’s SuperMover split. High reps, rapid cadence, sets to failure, ~1 min rest between sets.',
     repStyle: 'supermover',
+    // Prescriptions for movements SHARED with the Recommended Routine, so they
+    // show the book's numbers while SuperMover is active instead of RR's 8–12.
+    // (SuperMover-only movements carry their own `rx` on the movement itself.)
+    rx: {
+      dips:   '3 × failure',
+      pushup: '3 × failure',
+      row:    '3 × failure',
+      hinge:  '3 × 50 (kettlebell swing)',
+    },
     // 0=Sun … 6=Sat
     days: [
       { label: 'Rest', rest: true, items: [] },
@@ -696,6 +705,7 @@ function openSheet(mvId, editId) {
 
   document.getElementById('sheetTitle').textContent = (editId ? 'Edit · ' : '') + m.name;
   document.getElementById('sheetCues').textContent = m.cues;
+  showCardFor(m.id); // async; reveals the card only if one is stored
   document.getElementById('valueLabel').textContent = m.type === 'time' ? 'Seconds' : 'Reps';
   document.getElementById('valueInput').value = value;
   document.getElementById('weightInput').value = weight;
@@ -728,15 +738,33 @@ function openSheet(mvId, editId) {
   //   rr         — 3×8–12 at failure − 1, advance the variation at the top.
   //   supermover — high reps, rapid cadence, sets to failure, ~1 min rest,
   //                progress by adding reps rather than changing variation.
+  // The effort label is programme-specific too: RR stops shy of failure,
+  // SuperMover deliberately takes sets to failure.
+  const effortLabel = document.getElementById('effortLabel');
+  if (effortLabel) {
+    effortLabel.textContent = (m.style === 'supermover' || activeRoutine().repStyle === 'supermover')
+      ? 'Effort — SuperMover takes most sets to failure'
+      : 'Effort — stop a couple reps shy of failure';
+  }
+
   const ph = document.getElementById('progressHint');
   if (!editId && !isBike && m.range) {
     const isHold = m.type === 'time';
     const [lo, hi] = m.range;
-    const superMover = activeRoutine().repStyle === 'supermover';
+    // A movement that only exists in SuperMover always shows SuperMover
+    // guidance, whichever routine is active — otherwise a SuperMover-only
+    // exercise would show RR wording that doesn't apply to it. Movements shared
+    // by both programmes (push-ups, dips, rows, hinge) follow the active routine.
+    const superMover = m.style === 'supermover' || activeRoutine().repStyle === 'supermover';
     let txt;
 
     if (superMover) {
-      const target = isHold ? `3 × ${hi >= 60 ? Math.round(hi / 60) + ' min' : hi + 's'}` : `3 × ${lo}–${hi}`;
+      // Prefer the book's own prescription: a routine-level override for shared
+      // movements first, then the movement's own, then the computed range.
+      const r = activeRoutine();
+      const routineRx = r.repStyle === 'supermover' ? (r.rx || {})[m.id] : null;
+      const target = routineRx || m.rx
+        || (isHold ? `3 × ${hi >= 60 ? Math.round(hi / 60) + ' min' : hi + 's'}` : `3 × ${lo}–${hi}`);
       const advice = isHold
         ? 'hold the full time with quality, then add a set or load'
         : 'take each set close to failure, then simply add reps next time';
@@ -1371,6 +1399,224 @@ function clearData() {
   render();
 }
 
+// ---------- Exercise cards (on-device only) ----------
+// The SuperMover cards are artwork from a paid product, so they are never
+// committed to this (public) repo. Instead the user imports their own copy
+// once; images are downscaled and kept in IndexedDB on the device.
+
+const CARD_DB = 'cal_cards';
+const CARD_STORE = 'cards';
+const CARD_MAX_W = 1200;   // plenty for a phone, keeps the card text legible
+const CARD_QUALITY = 0.85;
+
+function cardDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(CARD_DB, 1);
+    req.onupgradeneeded = () => {
+      if (!req.result.objectStoreNames.contains(CARD_STORE)) req.result.createObjectStore(CARD_STORE);
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+function cardTx(mode, fn) {
+  return cardDB().then((db) => new Promise((resolve, reject) => {
+    const tx = db.transaction(CARD_STORE, mode);
+    const store = tx.objectStore(CARD_STORE);
+    const out = fn(store);
+    tx.oncomplete = () => resolve(out && out.result !== undefined ? out.result : out);
+    tx.onerror = () => reject(tx.error);
+  }));
+}
+const cardPut   = (id, blob) => cardTx('readwrite', (s) => s.put(blob, id));
+const cardGet   = (id)       => cardTx('readonly',  (s) => s.get(id));
+const cardKeys  = ()         => cardTx('readonly',  (s) => s.getAllKeys());
+const cardAll   = ()         => cardTx('readonly',  (s) => s.getAll());
+const cardClear = ()         => cardTx('readwrite', (s) => s.clear());
+
+// Map a card filename to a movement id. Names are normalised (lowercase,
+// letters only) so "Tactical Pull Ups.png" matches "tacticalpullup".
+const CARD_ALIASES = {
+  abrollout: 'abrollout',
+  airsquats: 'airsquat',
+  bodyweightrows: 'row',
+  boxing: 'shadowbox',
+  cossacksquats: 'cossack',
+  dips: 'dips',
+  gobletcurls: 'gobletcurl',
+  hollowbodyhold: 'hollowhold',
+  jumprope: 'jumprope',
+  kettlebellhalos: 'kbhalo',
+  kettlebellswing: 'hinge',
+  lizardcrawl: 'lizardcrawl',
+  lunges: 'multilunge',
+  pikepushup: 'pikepushup',
+  precisionbroadjump: 'broadjump',
+  pushups: 'pushup',
+  running: 'run',
+  sprintdrills: 'sprints',
+  squatwalk: 'squatwalk',
+  tacticalpullups: 'tacticalpullup',
+};
+function matchCardName(filename) {
+  const base = filename.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, '');
+  const norm = base.toLowerCase().replace(/[^a-z]/g, '');
+  if (CARD_ALIASES[norm]) return CARD_ALIASES[norm];
+  // Fall back to a direct id match, then a singular/plural nudge.
+  if (byId(norm)) return norm;
+  const singular = norm.replace(/s$/, '');
+  if (CARD_ALIASES[singular]) return CARD_ALIASES[singular];
+  if (byId(singular)) return singular;
+  return null;
+}
+
+// Minimal ZIP reader: walks the central directory and inflates entries with
+// the browser's native DecompressionStream (no library needed).
+async function readZip(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const dv = new DataView(buf.buffer);
+  // Find the End Of Central Directory record (scan back from the tail).
+  let eocd = -1;
+  for (let i = buf.length - 22; i >= 0 && i > buf.length - 66000; i--) {
+    if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error('Not a valid .zip file.');
+  const count = dv.getUint16(eocd + 10, true);
+  let p = dv.getUint32(eocd + 16, true);
+
+  const out = [];
+  for (let n = 0; n < count; n++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true);
+    const compSize = dv.getUint32(p + 20, true);
+    const nameLen = dv.getUint16(p + 28, true);
+    const extraLen = dv.getUint16(p + 30, true);
+    const commentLen = dv.getUint16(p + 32, true);
+    const localOff = dv.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nameLen));
+    p += 46 + nameLen + extraLen + commentLen;
+
+    if (name.endsWith('/')) continue;                 // directory entry
+    if (name.split('/').pop().startsWith('.')) continue; // __MACOSX / dotfiles
+    // Local header: data begins after its own name + extra fields.
+    const lNameLen = dv.getUint16(localOff + 26, true);
+    const lExtraLen = dv.getUint16(localOff + 28, true);
+    const start = localOff + 30 + lNameLen + lExtraLen;
+    const raw = buf.subarray(start, start + compSize);
+
+    let data;
+    if (method === 0) {
+      data = raw;
+    } else if (method === 8) {
+      const ds = new DecompressionStream('deflate-raw');
+      const stream = new Blob([raw]).stream().pipeThrough(ds);
+      data = new Uint8Array(await new Response(stream).arrayBuffer());
+    } else {
+      continue; // unsupported compression — skip rather than fail the import
+    }
+    out.push({ name, blob: new Blob([data]) });
+  }
+  return out;
+}
+
+// Downscale a card so 23 A4/300dpi PNGs don't eat ~26 MB of device storage.
+async function shrinkImage(blob) {
+  const bmp = await createImageBitmap(blob);
+  const scale = Math.min(1, CARD_MAX_W / bmp.width);
+  const w = Math.round(bmp.width * scale);
+  const h = Math.round(bmp.height * scale);
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  canvas.getContext('2d').drawImage(bmp, 0, 0, w, h);
+  bmp.close && bmp.close();
+  const type = 'image/webp';
+  const made = await new Promise((r) => canvas.toBlob(r, type, CARD_QUALITY));
+  // Safari/older engines may not support webp encoding — fall back to JPEG.
+  return made || await new Promise((r) => canvas.toBlob(r, 'image/jpeg', CARD_QUALITY));
+}
+
+// Import cards from either a .zip or a multi-select of image files.
+async function importCards(files) {
+  const status = document.getElementById('cardStatus');
+  const say = (t) => { if (status) { status.hidden = false; status.textContent = t; } };
+  try {
+    let entries = [];
+    for (const f of files) {
+      if (/\.zip$/i.test(f.name)) {
+        say('Reading zip…');
+        entries = entries.concat(await readZip(f));
+      } else if (/^image\//.test(f.type) || /\.(png|jpe?g|webp)$/i.test(f.name)) {
+        entries.push({ name: f.name, blob: f });
+      }
+    }
+    if (!entries.length) { say('No images found in that file.'); return; }
+
+    let saved = 0, bytes = 0;
+    const unmatched = [];
+    for (let i = 0; i < entries.length; i++) {
+      const { name, blob } = entries[i];
+      const id = matchCardName(name);
+      if (!id) { unmatched.push(name.replace(/^.*\//, '')); continue; }
+      say(`Processing ${i + 1} of ${entries.length}…`);
+      const small = await shrinkImage(blob);
+      await cardPut(id, small);
+      saved++; bytes += small.size;
+    }
+    const mb = (bytes / 1048576).toFixed(1);
+    let msg = `Imported ${saved} card${saved === 1 ? '' : 's'} (${mb} MB).`;
+    if (unmatched.length) msg += ` Skipped ${unmatched.length} with no matching exercise: ${unmatched.join(', ')}.`;
+    say(msg);
+    refreshCardStatus(true);
+  } catch (err) {
+    say('Import failed: ' + (err && err.message ? err.message : 'unknown error'));
+  }
+}
+
+// Show the card for a movement in the log sheet (if one has been imported).
+// Object URLs are revoked as we go so repeated opens don't leak memory.
+let currentCardUrl = null;
+async function showCardFor(movementId) {
+  const wrap = document.getElementById('cardThumb');
+  const img = document.getElementById('cardThumbImg');
+  if (!wrap || !img) return;
+  if (currentCardUrl) { URL.revokeObjectURL(currentCardUrl); currentCardUrl = null; }
+  wrap.hidden = true;
+  if (!movementId || !('indexedDB' in window)) return;
+  try {
+    const blob = await cardGet(movementId);
+    if (!blob) return;
+    currentCardUrl = URL.createObjectURL(blob);
+    img.src = currentCardUrl;
+    wrap.hidden = false;
+  } catch { /* storage unavailable — just don't show a card */ }
+}
+
+function openCardViewer() {
+  const src = document.getElementById('cardThumbImg').src;
+  if (!src) return;
+  document.getElementById('cardViewerImg').src = src;
+  document.getElementById('cardViewer').hidden = false;
+}
+function closeCardViewer() { document.getElementById('cardViewer').hidden = true; }
+
+async function refreshCardStatus(keepMessage) {
+  const el = document.getElementById('cardCount');
+  if (!el) return;
+  try {
+    const blobs = await cardAll();
+    const bytes = blobs.reduce((s, b) => s + (b.size || 0), 0);
+    el.textContent = blobs.length
+      ? `${blobs.length} card${blobs.length === 1 ? '' : 's'} stored · ${(bytes / 1048576).toFixed(1)} MB`
+      : 'No cards imported yet';
+  } catch {
+    el.textContent = 'Card storage unavailable on this browser';
+  }
+  if (!keepMessage) {
+    const status = document.getElementById('cardStatus');
+    if (status) status.hidden = true;
+  }
+}
+
 // ---------- Settings ----------
 const settingsSheet = document.getElementById('settingsSheet');
 // Render the routine chips + blurb. Selecting is non-destructive: it only
@@ -1395,6 +1641,7 @@ function renderRoutineRow() {
 
 function openSettings() {
   renderRoutineRow();
+  refreshCardStatus();
   document.getElementById('setAutoRest').checked = SETTINGS.autoRest;
   document.getElementById('restLenInput').value = SETTINGS.restDefault;
   const row = document.getElementById('restLenRow');
@@ -1510,6 +1757,27 @@ function addReminderToCalendar() {
   URL.revokeObjectURL(url);
 }
 function closeSettings() { settingsSheet.hidden = true; }
+// ---- Exercise card wiring ----
+document.getElementById('cardThumb').onclick = openCardViewer;
+document.getElementById('cardViewerClose').onclick = closeCardViewer;
+document.getElementById('cardViewer').onclick = (e) => {
+  if (e.target.id === 'cardViewer') closeCardViewer(); // tap the backdrop to close
+};
+document.getElementById('importCardsBtn').onclick = () => document.getElementById('cardFile').click();
+document.getElementById('cardFile').onchange = (ev) => {
+  const files = [...ev.target.files];
+  ev.target.value = ''; // allow re-importing the same file later
+  if (files.length) importCards(files);
+};
+document.getElementById('clearCardsBtn').onclick = async () => {
+  if (!confirm('Remove all imported exercise cards from this device?')) return;
+  await cardClear();
+  await showCardFor(null);
+  refreshCardStatus();
+  const status = document.getElementById('cardStatus');
+  if (status) { status.hidden = false; status.textContent = 'All cards removed.'; }
+};
+
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('addReminder').onclick = addReminderToCalendar;
 document.getElementById('checkUpdate').onclick = checkForUpdate;
