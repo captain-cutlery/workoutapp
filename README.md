@@ -113,7 +113,11 @@ Run · Liquid Motion · Hindu Squats · Step Up.
 The SuperMover sessions are transcribed from the book's own "The SuperMover
 Workout" text listing, which is authoritative — the illustrated exercise cards
 are a slightly different selection. Liquid Motion is the 8-movement mobility
-flow (30s each, 2–3 rounds), not a generic 10-minute block.
+flow (30s each, continuous movement, 2–3 rounds), not a generic 10-minute
+block; its order and naming follow the official Liquid Motion cheat-sheet card
+(prayer squat, roundhouse stretch, shoulder dislocates, crab reach, elephant
+walk, lateral gorilla crawl, V-W stretch, sofa hip flexor stretch). The
+cheat sheet itself imports like any other card — name it `Liquid Motion.png`.
 
 ---
 

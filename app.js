@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v27';
+const APP_VERSION = 'v28';
 const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -160,8 +160,8 @@ const MOVEMENTS = [
   },
   {
     id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Mobility', type: 'time', range: [30, 30], style: 'supermover', rx: '30s each · 2–3 rounds',
-    cues: 'The Liquid Motion mobility flow — 30 seconds each, 2–3 rounds: prayer squat, shoulder dislocates, crab reach, elephant walks, V-W stretch, roundhouse kick stretch, hip flexor stretch, lateral gorilla walk. Move gently up, down and around each position rather than holding still.',
-    variations: ['Prayer squat', 'Shoulder dislocates', 'Crab reach', 'Elephant walks', 'V-W stretch', 'Roundhouse kick stretch', 'Hip flexor stretch', 'Lateral gorilla walk'],
+    cues: 'The Liquid Motion flow — 30 seconds each, continuous movement, 2–3 rounds. In order: prayer squat, roundhouse stretch, shoulder dislocates, crab reach, elephant walk, lateral gorilla crawl, V-W stretch, sofa hip flexor stretch. Keep moving gently in and around each position rather than holding still.',
+    variations: ['Prayer squat', 'Roundhouse stretch', 'Shoulder dislocates', 'Crab reach', 'Elephant walk', 'Lateral gorilla crawl', 'V-W stretch', 'Sofa hip flexor stretch'],
   },
   {
     id: 'hindusquat', name: 'Hindu Squats', emoji: '🙏', group: 'Legs', type: 'reps', range: [30, 50], style: 'supermover', rx: '3 × failure',
@@ -1427,7 +1427,7 @@ function clearData() {
 
 const CARD_DB = 'cal_cards';
 const CARD_STORE = 'cards';
-const CARD_MAX_W = 1200;   // plenty for a phone, keeps the card text legible
+const CARD_MAX_W = 1400;   // enough for dense sheets (e.g. Liquid Motion) to stay legible
 const CARD_QUALITY = 0.85;
 
 function cardDB() {
@@ -1480,6 +1480,10 @@ const CARD_ALIASES = {
   tacticalpullups: 'tacticalpullup',
   hindusquats: 'hindusquat',
   stepup: 'stepup',
+  // The Liquid Motion cheat sheet covers all 8 mobility moves at once.
+  liquidmotion: 'liquidmotion',
+  liquidmotioncheatsheet: 'liquidmotion',
+  mobility: 'liquidmotion',
 };
 function matchCardName(filename) {
   const base = filename.replace(/^.*\//, '').replace(/\.[a-z0-9]+$/i, '');
