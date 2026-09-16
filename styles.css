@@ -102,6 +102,13 @@ body {
 .week-summary { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 14px; font-size: 14px; color: var(--muted); margin: 4px 0 6px; }
 .week-summary b { color: var(--accent); }
 
+/* Routine badge on Today (shown for day-based routines instead of "Edit") */
+.routine-badge { color: var(--accent); background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 999px; font-size: 12px; padding: 3px 10px; margin: 18px 4px 6px; white-space: nowrap; }
+
+/* Rest-day card */
+.rest-card { color: var(--muted); font-size: 14px; line-height: 1.5; }
+.rest-card b { color: var(--text); }
+
 /* Undo toast */
 .toast {
   position: fixed; left: 50%; transform: translateX(-50%);

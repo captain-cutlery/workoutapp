@@ -5,8 +5,8 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v22';
-const APP_BUILT = '31 May 2026';
+const APP_VERSION = 'v23';
+const APP_BUILT = '16 Sep 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
@@ -72,6 +72,97 @@ const MOVEMENTS = [
     cues: 'Hard bursts on the bike. Push near-max during work intervals, spin easy to recover. Raise the tension dial to make bursts harder as you progress.',
     variations: ['Tension 1', 'Tension 2', 'Tension 3', 'Tension 4', 'Tension 5', 'Tension 6', 'Tension 7', 'Tension 8'],
   },
+
+  // ---- SuperMover (The Bioneer) additions ----
+  // Purely additive: nothing above is renamed or removed, so existing logs and
+  // the Recommended Routine keep working exactly as before. These only appear
+  // in the suggested session when the SuperMover routine is selected, but are
+  // always free-loggable from the Log tab.
+  {
+    id: 'lizardcrawl', name: 'Lizard Crawl', emoji: '🦎', group: 'Push', type: 'time', range: [60, 60],
+    cues: 'Crawl along the floor low to the ground, chest close to the deck. Bring the knee out to the side toward the elbow as you reach forward with the opposite hand. Keep the hips low.',
+    variations: ['On the spot', 'Forward crawl', 'Forward + reverse', 'Weighted vest'],
+  },
+  {
+    id: 'pikepushup', name: 'Pike Push-ups', emoji: '🔺', group: 'Push', type: 'reps', range: [15, 30],
+    cues: 'Hips high in a pike so the torso is close to vertical, then push through the shoulders. The closer to vertical, the more it targets the delts.',
+    variations: ['Feet on floor', 'Feet elevated', 'Wall-assisted', 'Full handstand push-up'],
+  },
+  {
+    id: 'abrollout', name: 'Ab Roll-out', emoji: '🎡', group: 'Core', type: 'reps', range: [10, 25],
+    cues: 'Hold the wheel with both hands and roll forward. Contract the core, hips and glutes to resist extension — never let the low back arch. Only go as far as you can control.',
+    variations: ['From knees (short)', 'From knees (full)', 'Standing'],
+  },
+  {
+    id: 'gobletcurl', name: 'Goblet Curls', emoji: '🏋️', group: 'Pull', type: 'reps', range: [15, 30],
+    cues: 'Hold a kettlebell, dumbbell or heavy rucksack in both hands and curl upwards. Increase or decrease the weight to adjust difficulty.',
+    variations: ['Light', 'Moderate', 'Heavy'],
+  },
+  {
+    id: 'tacticalpullup', name: 'Tactical Pull-ups', emoji: '🪖', group: 'Pull', type: 'reps', range: [8, 20],
+    cues: 'Grab the bar and pull explosively so your thumbs meet the top — as though hauling yourself over a ledge. Keep the torso straight and lower under control.',
+    variations: ['Band-assisted', 'Standard', 'Explosive', 'Weighted'],
+  },
+  {
+    id: 'multilunge', name: 'Multi-directional Lunge', emoji: '🧭', group: 'Legs', type: 'reps', range: [10, 20],
+    cues: 'Lunge in three directions — forward, to the side, and backwards. Great for hip mobility, balance and strength through multiple planes.',
+    variations: ['Bodyweight', 'Slow tempo', 'Weighted'],
+  },
+  {
+    id: 'squatwalk', name: 'Squat Walks', emoji: '🦆', group: 'Legs', type: 'time', range: [60, 60],
+    cues: 'Drop into a deep squat and walk forward while staying down. Builds strength endurance and mobility in the legs. Make a game of it — squat-walk to fetch something.',
+    variations: ['Short distance', 'Continuous 1 min', 'Weighted'],
+  },
+  {
+    id: 'broadjump', name: 'Precision Broad Jumps', emoji: '🐸', group: 'Legs', type: 'reps', range: [10, 20],
+    cues: 'A precision jump: aim to land on a target, not just as far as you can. Swing the arms and jump from one foot position to another. Land gently on the balls of the feet to absorb impact.',
+    variations: ['Floor targets', 'Onto a low box', 'Longer distance'],
+  },
+  {
+    id: 'kbhalo', name: 'Kettlebell Halos', emoji: '💫', group: 'Push', type: 'reps', range: [15, 20],
+    cues: 'Hold a kettlebell by the horns, bring it past the right ear, behind the head, and back to the start. Circle one way then reverse. Great shoulder mobility work.',
+    variations: ['Light', 'Moderate', 'Heavy'],
+  },
+  {
+    id: 'hollowhold', name: 'Hollow Body Hold', emoji: '🌙', group: 'Core', type: 'time', range: [30, 60],
+    cues: 'Lie on your back, legs straight and arms overhead. Contract the core so the lower back touches the ground and the shoulders and legs lift — a slight concave shape. Hold.',
+    variations: ['Tuck', 'One leg extended', 'Full hollow', 'Hollow rocks'],
+  },
+  {
+    id: 'cossack', name: 'Cossack Squats', emoji: '↔️', group: 'Legs', type: 'reps', range: [5, 15],
+    cues: 'Squat down over one leg with the other extended out to the side, foot flat. Keep the extended leg straight and the chest up. Excellent for hip adductors and deep mobility.',
+    variations: ['Assisted / heel raised', 'Bodyweight', 'Weighted'],
+  },
+  {
+    id: 'airsquat', name: 'Air Squats', emoji: '🪑', group: 'Legs', type: 'reps', range: [30, 50],
+    cues: 'Feet shoulder-width, toes slightly out. Squat until the thighs are at least parallel, then return to standing. Keep the back straight. High-rep conditioning.',
+    variations: ['Bodyweight', 'Fast cadence', 'Weighted vest'],
+  },
+  {
+    id: 'sprints', name: 'Sprint Drills', emoji: '💨', group: 'Cardio', type: 'reps', range: [5, 10],
+    cues: 'Mark out ~100 metres and sprint to the end, walk back, repeat. Log one rep per sprint. Builds immense power and reinforces one of the most important human movement patterns.',
+    variations: ['60m', '100m', 'Hill sprints'],
+  },
+  {
+    id: 'jumprope', name: 'Jump Rope', emoji: '🪢', group: 'Warm-up', type: 'time', range: [600, 600],
+    cues: 'Small hops, minimal impact, arms close to the sides — rotate the rope from the wrists, not the shoulders. Keep a subtle hollow-body tension. No rope? Mime it.',
+    variations: ['Basic bounce', 'Crossovers', 'Double unders'],
+  },
+  {
+    id: 'shadowbox', name: 'Shadow Boxing', emoji: '🥊', group: 'Warm-up', type: 'time', range: [600, 600],
+    cues: 'Hands up in guard, punch from the hip and turn the fist over. Stay relaxed, never lock out the elbow. Throw kicks too — roundhouses open the hips and get you rotating. Work both sides.',
+    variations: ['Shadow boxing', 'Heavy bag', 'With kicks'],
+  },
+  {
+    id: 'run', name: 'Run', emoji: '🏃', group: 'Warm-up', type: 'time', range: [900, 900],
+    cues: 'A short run at a gentle pace to get the blood flowing and settle into cadence. Stay relaxed and focus on gait mechanics rather than speed or distance.',
+    variations: ['Easy pace', 'Off-road', 'Minimal shoes'],
+  },
+  {
+    id: 'liquidmotion', name: 'Liquid Motion', emoji: '🌊', group: 'Warm-up', type: 'time', range: [600, 600],
+    cues: 'Ten minutes of flowing, exploratory movement — rotate the spine, open the hips, move through positions slowly and continuously. Mobility through motion rather than static stretching.',
+    variations: ['Ground flow', 'Standing flow', 'Free movement'],
+  },
 ];
 
 const byId = (id) => MOVEMENTS.find((m) => m.id === id);
@@ -90,6 +181,80 @@ const DEFAULT_SESSION = [
   { id: 'antirot',   target: 'Triplet · anti-rot · 3×10–30s' },
   { id: 'extension', target: 'Triplet · extension · 3×8–12' },
 ];
+
+// ---------- Routines ----------
+// A routine decides what the Today tab suggests. 'rr' is the original
+// Recommended Routine behaviour and stays the default, so switching is purely
+// opt-in and fully reversible — routines never touch the log, and the custom
+// session saved under SESSION_KEY only ever applies to 'rr'.
+//
+// 'rr'         : one full-body session every day (user-editable).
+// 'supermover' : The Bioneer's SuperMover, "workout-only" weekly split.
+//                days[] is indexed by JS getDay() — 0 = Sunday.
+
+const SUPERMOVER_PUSH = [
+  { id: 'dips',        target: '3 × failure · rapid cadence' },
+  { id: 'lizardcrawl', target: '3 × 1 min' },
+  { id: 'pushup',      target: '3 × failure · rapid cadence' },
+  { id: 'pikepushup',  target: '3 × failure' },
+];
+const SUPERMOVER_PULL = [
+  { id: 'row',            target: '3 × failure' },
+  { id: 'abrollout',      target: '3 × failure' },
+  { id: 'gobletcurl',     target: '3 × failure' },
+  { id: 'tacticalpullup', target: '3 × failure' },
+];
+const SUPERMOVER_LEGS = [
+  { id: 'multilunge', target: '2 × 10 each direction' },
+  { id: 'squatwalk',  target: '3 × 1 min' },
+  { id: 'broadjump',  target: '3 × 10' },
+  { id: 'hinge',      target: '3 × 50 · kettlebell swing' },
+];
+const SUPERMOVER_FULL = [
+  { id: 'pushup',     target: '3 × failure' },
+  { id: 'hinge',      target: '3 × 50 · kettlebell swing' },
+  { id: 'gobletcurl', target: '3 × failure' },
+  { id: 'hollowhold', target: '3 × 1 min' },
+  { id: 'kbhalo',     target: '2 × 15' },
+  { id: 'row',        target: '3 × 10' },
+  { id: 'squatwalk',  target: '3 × 1 min' },
+];
+// Every SuperMover training day finishes with 10 minutes of Liquid Motion.
+const SUPERMOVER_FINISHER = [{ id: 'liquidmotion', target: '10 min' }];
+
+const ROUTINES = {
+  rr: {
+    name: 'Recommended Routine',
+    blurb: 'A short full-body session. Move with control, stop a couple reps shy of failure.',
+    repStyle: 'rr',
+  },
+  supermover: {
+    name: 'SuperMover',
+    blurb: 'The Bioneer’s SuperMover split. High reps, rapid cadence, sets to failure, ~1 min rest between sets.',
+    repStyle: 'supermover',
+    // 0=Sun … 6=Sat
+    days: [
+      { label: 'Rest', rest: true, items: [] },
+      { label: 'Push day',      items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
+      { label: 'Pull day',      items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
+      { label: 'Rest', rest: true, items: [] },
+      { label: 'Rest', rest: true, items: [] },
+      { label: 'Leg day',       items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
+      { label: 'Full body',     items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
+    ],
+  },
+};
+
+const activeRoutine = () => ROUTINES[SETTINGS.routine] || ROUTINES.rr;
+
+// What Today should suggest: the user's saved session for 'rr', or the
+// weekday's session for a day-based routine. Returns { label, rest, items }.
+function todaysPlan() {
+  const r = activeRoutine();
+  if (!r.days) return { label: 'Suggested session', rest: false, items: SESSION };
+  const d = r.days[new Date().getDay()] || { label: 'Rest', rest: true, items: [] };
+  return { label: d.label, rest: !!d.rest, items: d.items };
+}
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
 const REST_PRESETS = [60, 90, 120];
@@ -127,7 +292,9 @@ function saveSession(s) { localStorage.setItem(SESSION_KEY, JSON.stringify(s)); 
 let SESSION = loadSession();
 
 const SETTINGS_KEY = 'cal_settings_v1';
-const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg', remDays: [1, 3, 5], remTime: '18:00' };
+// `routine` defaults to 'rr' so existing behaviour is untouched until the user
+// opts in from Settings; switching back restores everything exactly.
+const DEFAULT_SETTINGS = { autoRest: true, restDefault: 90, unit: 'kg', remDays: [1, 3, 5], remTime: '18:00', routine: 'rr' };
 // Last-used HIIT setup, remembered between sessions.
 const HIIT_KEY = 'cal_hiit_v1';
 const DEFAULT_HIIT = { work: 30, rest: 60, rounds: 8, tension: 4 };
@@ -204,18 +371,33 @@ function weekSummary() {
 function renderToday() {
   topTitle.textContent = 'Today';
   const today = entriesOn(TODAY);
-  let html = `<p class="lede">A short full-body session. Move with control, stop a couple reps shy of failure.</p>`;
+  const routine = activeRoutine();
+  const plan = todaysPlan();
+
+  let html = `<p class="lede">${routine.blurb}</p>`;
   const ws = weekSummary();
   if (ws) {
     html += `<div class="week-summary">📅 This week: <b>${ws.sessions}</b> session${ws.sessions > 1 ? 's' : ''} · <b>${ws.sets}</b> sets${ws.reps ? ` · <b>${ws.reps}</b> reps` : ''}</div>`;
   }
-  html += `<div class="section-row"><div class="section-title">Suggested session</div><button id="editSession" class="link-btn">Edit</button></div>`;
-  for (const s of SESSION) {
-    const m = byId(s.id);
-    if (!m) continue;
-    const done = today.filter((e) => e.movement === s.id);
-    html += movementCard(m, s.target, summarize(m, done), done.length);
+
+  // 'rr' keeps its editable session; day-based routines show the day's label.
+  const editable = !routine.days;
+  html += `<div class="section-row"><div class="section-title">${editable ? 'Suggested session' : plan.label}</div>`
+    + (editable ? `<button id="editSession" class="link-btn">Edit</button>` : `<span class="routine-badge">${routine.name}</span>`)
+    + `</div>`;
+
+  if (plan.rest) {
+    html += `<div class="card rest-card">😴 <b>Rest day.</b> Recovery is when you actually get stronger —
+      take it. You can still free-log anything from the Log tab.</div>`;
+  } else {
+    for (const s of plan.items) {
+      const m = byId(s.id);
+      if (!m) continue;
+      const done = today.filter((e) => e.movement === s.id);
+      html += movementCard(m, s.target, summarize(m, done), done.length);
+    }
   }
+
   html += `<div class="section-title">Today's log</div>`;
   html += today.length
     ? renderEntryList(today)
@@ -223,17 +405,30 @@ function renderToday() {
   view.innerHTML = html;
   wireCards();
   wireEntries();
-  document.getElementById('editSession').onclick = openSessionEditor;
+  const edit = document.getElementById('editSession');
+  if (edit) edit.onclick = openSessionEditor;
 }
+
+// Display order for the Log tab's group headings. Movements are bucketed by
+// group rather than relying on array order, so new movements can be appended
+// anywhere in MOVEMENTS without producing duplicate headings.
+const GROUP_ORDER = ['Warm-up', 'Push', 'Pull', 'Legs', 'Hinge', 'Core', 'Cardio'];
 
 function renderLog() {
   topTitle.textContent = 'Log anything';
   let html = `<p class="lede">Free log — pick any movement and record a set.</p>`;
-  let group = '';
-  for (const m of MOVEMENTS) {
-    if (m.group !== group) { group = m.group; html += `<div class="section-title">${group}</div>`; }
-    const done = entriesOn(TODAY).filter((e) => e.movement === m.id);
-    html += movementCard(m, m.variations.length + ' progressions', summarize(m, done), done.length);
+  const todays = entriesOn(TODAY);
+  const groups = [...new Set(MOVEMENTS.map((m) => m.group))]
+    .sort((a, b) => {
+      const ia = GROUP_ORDER.indexOf(a), ib = GROUP_ORDER.indexOf(b);
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    });
+  for (const group of groups) {
+    html += `<div class="section-title">${group}</div>`;
+    for (const m of MOVEMENTS.filter((x) => x.group === group)) {
+      const done = todays.filter((e) => e.movement === m.id);
+      html += movementCard(m, m.variations.length + ' progressions', summarize(m, done), done.length);
+    }
   }
   view.innerHTML = html;
   wireCards();
@@ -528,22 +723,36 @@ function openSheet(mvId, editId) {
     lt.hidden = true;
   }
 
-  // Target range + progression nudge (Recommended-Routine style): show the
-  // working range, and suggest advancing a rung once you top it on this variation.
+  // Target range + progression nudge. The two routines disagree on rep scheme,
+  // so the guidance follows whichever routine is active:
+  //   rr         — 3×8–12 at failure − 1, advance the variation at the top.
+  //   supermover — high reps, rapid cadence, sets to failure, ~1 min rest,
+  //                progress by adding reps rather than changing variation.
   const ph = document.getElementById('progressHint');
   if (!editId && !isBike && m.range) {
     const isHold = m.type === 'time';
     const [lo, hi] = m.range;
-    const target = isHold ? `3 × ${lo}–${hi}s` : `3 × ${lo}–${hi}`;
-    const advice = isHold
-      ? `hold for time, advance when you reach ${hi}s on all 3 sets`
-      : `add a rep per session, advance when you hit 3 × ${hi}`;
-    let txt = `<span class="ph-label">RR target ${target}</span> at failure − 1 (leave ~1 in the tank); ${advice}.`;
-    if (readyToAdvance(m)) {
-      const cur = m.variations[variation];
-      const next = m.variations[Math.min(variation + 1, m.variations.length - 1)];
-      const u = isHold ? 's' : '';
-      if (next !== cur) txt = `<span class="ph-label ph-go">Ready to progress 🎉</span> You're topping ${hi}${u} on <b>${cur}</b> — try <b>${next}</b> next.`;
+    const superMover = activeRoutine().repStyle === 'supermover';
+    let txt;
+
+    if (superMover) {
+      const target = isHold ? `3 × ${hi >= 60 ? Math.round(hi / 60) + ' min' : hi + 's'}` : `3 × ${lo}–${hi}`;
+      const advice = isHold
+        ? 'hold the full time with quality, then add a set or load'
+        : 'take each set close to failure, then simply add reps next time';
+      txt = `<span class="ph-label">SuperMover ${target}</span> rapid cadence, ~1 min rest; ${advice}.`;
+    } else {
+      const target = isHold ? `3 × ${lo}–${hi}s` : `3 × ${lo}–${hi}`;
+      const advice = isHold
+        ? `hold for time, advance when you reach ${hi}s on all 3 sets`
+        : `add a rep per session, advance when you hit 3 × ${hi}`;
+      txt = `<span class="ph-label">RR target ${target}</span> at failure − 1 (leave ~1 in the tank); ${advice}.`;
+      if (readyToAdvance(m)) {
+        const cur = m.variations[variation];
+        const next = m.variations[Math.min(variation + 1, m.variations.length - 1)];
+        const u = isHold ? 's' : '';
+        if (next !== cur) txt = `<span class="ph-label ph-go">Ready to progress 🎉</span> You're topping ${hi}${u} on <b>${cur}</b> — try <b>${next}</b> next.`;
+      }
     }
     ph.innerHTML = txt;
     ph.hidden = false;
@@ -1164,7 +1373,28 @@ function clearData() {
 
 // ---------- Settings ----------
 const settingsSheet = document.getElementById('settingsSheet');
+// Render the routine chips + blurb. Selecting is non-destructive: it only
+// changes what Today suggests, so you can switch back at any time.
+function renderRoutineRow() {
+  const row = document.getElementById('routineRow');
+  const blurb = document.getElementById('routineBlurb');
+  row.innerHTML = '';
+  for (const [key, r] of Object.entries(ROUTINES)) {
+    const c = document.createElement('button');
+    c.className = 'chip' + (key === SETTINGS.routine ? ' sel' : '');
+    c.textContent = r.name;
+    c.dataset.routine = key;
+    c.onclick = () => {
+      row.querySelectorAll('.chip').forEach((x) => x.classList.toggle('sel', x === c));
+      blurb.textContent = r.blurb;
+    };
+    row.appendChild(c);
+  }
+  blurb.textContent = (ROUTINES[SETTINGS.routine] || ROUTINES.rr).blurb;
+}
+
 function openSettings() {
+  renderRoutineRow();
   document.getElementById('setAutoRest').checked = SETTINGS.autoRest;
   document.getElementById('restLenInput').value = SETTINGS.restDefault;
   const row = document.getElementById('restLenRow');
@@ -1292,6 +1522,8 @@ settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
   };
 });
 document.getElementById('saveSettings').onclick = () => {
+  const selRoutine = document.querySelector('#routineRow .chip.sel');
+  if (selRoutine) SETTINGS.routine = selRoutine.dataset.routine;
   SETTINGS.autoRest = document.getElementById('setAutoRest').checked;
   SETTINGS.restDefault = Math.max(5, parseInt(document.getElementById('restLenInput').value, 10) || 90);
   const selUnit = document.querySelector('#unitRow .chip.sel');
