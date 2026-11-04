@@ -1714,7 +1714,8 @@ function renderScheduleEditor() {
       a[parseInt(sel.dataset.dow, 10)] = sel.value;
       s.supermover = a;
       saveSchedule(s);
-      renderRoutineRow(); // refresh the week preview strip
+      renderScheduleEditor(); // refresh the dropdowns
+      renderRoutineRow();     // refresh the week preview strip
       render();
     };
   });
@@ -1868,7 +1869,7 @@ function addReminderToCalendar() {
   a.click();
   URL.revokeObjectURL(url);
 }
-function closeSettings() { settingsSheet.hidden = true; }
+function closeSettings() { settingsSheet.hidden = true; render(); }
 // ---- Exercise card wiring ----
 document.getElementById('cardThumb').onclick = openCardViewer;
 document.getElementById('cardViewerClose').onclick = closeCardViewer;
