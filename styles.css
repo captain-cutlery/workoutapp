@@ -318,3 +318,30 @@ body {
 
 .sheet-actions { margin-top: 22px; display: flex; flex-direction: column; gap: 4px; }
 .saved-hint { text-align: center; color: var(--accent); font-size: 14px; margin: 10px 0 0; }
+
+/* ===== Weekly schedule editor (SuperMover) ===== */
+.sched-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: var(--surface-2);
+}
+.sched-day {
+  font-weight: 700;
+  font-size: 13px;
+  min-width: 72px;
+}
+.sched-select {
+  flex: 1;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  appearance: auto; /* keep native dropdown arrow */
+}

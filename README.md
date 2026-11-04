@@ -41,7 +41,8 @@ If you're an assistant picking this project up fresh, read this section first.
   (`type: 'reps'`). Bike HIIT sessions store total work-seconds in `value` and
   the structure in `rir`/`note`.
 - **localStorage keys:** `cal_log_v1` (log), `cal_session_v1` (custom Today
-  session), `cal_settings_v1` (settings), `cal_hiit_v1` (last HIIT setup).
+  session), `cal_settings_v1` (settings), `cal_hiit_v1` (last HIIT setup),
+  `cal_schedule_v1` (SuperMover weekly schedule).
 
 ---
 
@@ -136,6 +137,12 @@ switching is non-destructive and instantly reversible.
   of jump rope / shadow boxing / run) and finishes with the Liquid Motion flow. Rep guidance switches to SuperMover's style: high reps, rapid
   cadence, sets to failure, ~1 min rest, progress by *adding reps* rather than
   advancing a variation.
+
+  **Customisable weekly schedule** — the day-to-day split can be remapped in
+  **Settings → SuperMover schedule**: seven per-day dropdowns (Rest / Push /
+  Pull / Legs / Full) that save immediately. Stored in `cal_schedule_v1`;
+  the "Reset to default" button restores the Bioneer split. The Settings week
+  preview strip and the Today tab both reflect the current schedule.
 
 ### Exercise cards (on-device only)
 
@@ -239,6 +246,12 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
   programme-aware effort label.
 - **v25** — optional on-device exercise cards: import a zip/images in Settings,
   stored in IndexedDB, shown in the log sheet with tap-to-enlarge.
+- **v26–v28** — (details not recorded in this file)
+- **v29** — SuperMover weekly schedule editor: remap which day each training
+  type falls on (Rest / Push / Pull / Legs / Full) from Settings; changes save
+  immediately and are reflected on the Today tab and the Settings week strip.
+  "Reset to default" restores the original Bioneer split. Stored in
+  `cal_schedule_v1`.
 
 ## Obsidian / PARA export & Syncthing workflow
 

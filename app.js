@@ -5,8 +5,8 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v28';
-const APP_BUILT = '16 Sep 2026';
+const APP_VERSION = 'v29';
+const APP_BUILT = '4 Nov 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
 // ---------- Movement library ----------
@@ -238,6 +238,34 @@ const SUPERMOVER_FINISHER = [{ id: 'liquidmotion', target: '30s each · 2–3 ro
 // loggable from the Log tab).
 const SUPERMOVER_WARMUP = 'Warm up — choose one: Jump Rope 10 min · Shadow Boxing 10 min · Run 15 min';
 
+// Canonical slot → day-object map. The user's stored schedule (if any)
+// overrides the default split on a per-day basis.
+const SUPERMOVER_SLOTS = {
+  rest: { label: 'Rest',      short: 'Rest', rest: true, items: [] },
+  push: { label: 'Push day',  short: 'Push', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
+  pull: { label: 'Pull day',  short: 'Pull', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
+  legs: { label: 'Leg day',   short: 'Legs', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
+  full: { label: 'Full body', short: 'Full', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
+};
+// 0=Sun … 6=Sat — the original Bioneer split.
+const DEFAULT_SUPERMOVER_SCHEDULE = ['rest', 'push', 'pull', 'rest', 'rest', 'legs', 'full'];
+const SCHEDULE_KEY = 'cal_schedule_v1';
+function loadSchedule() {
+  try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY)) || {}; }
+  catch { return {}; }
+}
+function saveSchedule(s) { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(s)); }
+// Returns the effective days array for a routine. For supermover, reads the
+// user's stored schedule; falls back to the default split if none is saved.
+function effectiveDays(routine) {
+  if (!routine.days) return null;
+  if (routine === 'supermover') {
+    const arr = (loadSchedule().supermover) || DEFAULT_SUPERMOVER_SCHEDULE;
+    return arr.map((slot) => SUPERMOVER_SLOTS[slot] || SUPERMOVER_SLOTS.rest);
+  }
+  return routine.days;
+}
+
 const ROUTINES = {
   rr: {
     name: 'Recommended Routine',
@@ -257,16 +285,9 @@ const ROUTINES = {
       row:    '3 × failure',
       hinge:  '3 × 50 (kettlebell swing)',
     },
-    // 0=Sun … 6=Sat
-    days: [
-      { label: 'Rest', short: 'Rest', rest: true, items: [] },
-      { label: 'Push day',  short: 'Push', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PUSH, ...SUPERMOVER_FINISHER] },
-      { label: 'Pull day',  short: 'Pull', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_PULL, ...SUPERMOVER_FINISHER] },
-      { label: 'Rest', short: 'Rest', rest: true, items: [] },
-      { label: 'Rest', short: 'Rest', rest: true, items: [] },
-      { label: 'Leg day',   short: 'Legs', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_LEGS, ...SUPERMOVER_FINISHER] },
-      { label: 'Full body', short: 'Full', note: SUPERMOVER_WARMUP, items: [...SUPERMOVER_FULL, ...SUPERMOVER_FINISHER] },
-    ],
+    // 0=Sun … 6=Sat — derived from the default schedule; overridden by the
+    // user's stored schedule (cal_schedule_v1) via effectiveDays().
+    days: DEFAULT_SUPERMOVER_SCHEDULE.map((s) => SUPERMOVER_SLOTS[s]),
   },
 };
 
@@ -277,7 +298,8 @@ const activeRoutine = () => ROUTINES[SETTINGS.routine] || ROUTINES.rr;
 function todaysPlan() {
   const r = activeRoutine();
   if (!r.days) return { label: 'Suggested session', rest: false, items: SESSION, note: '' };
-  const d = r.days[new Date().getDay()] || { label: 'Rest', rest: true, items: [] };
+  const days = effectiveDays(r);
+  const d = days[new Date().getDay()] || { label: 'Rest', rest: true, items: [] };
   return { label: d.label, rest: !!d.rest, items: d.items, note: d.note || '' };
 }
 
@@ -1653,11 +1675,44 @@ const settingsSheet = document.getElementById('settingsSheet');
 // routine is visible even on a rest day.
 function weekOverviewHtml(routine) {
   if (!routine.days) return '';
+  const days = effectiveDays(routine);
   const names = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const today = new Date().getDay();
-  return `<div class="wk-plan">` + routine.days.map((d, i) =>
+  return `<div class="wk-plan">` + days.map((d, i) =>
     `<div class="wk-plan-day${i === today ? ' is-today' : ''}${d.rest ? ' is-rest' : ''}">
        <b>${names[i]}</b><span>${d.short || d.label}</span></div>`).join('') + `</div>`;
+}
+
+// Render the per-day schedule editor in Settings. Only shown when the
+// SuperMover routine is active. Each row is a <select> that persists
+// immediately on change — no Save button needed.
+function renderScheduleEditor() {
+  const section = document.getElementById('scheduleSection');
+  const rows    = document.getElementById('scheduleRows');
+  if (!section) return;
+  if (SETTINGS.routine !== 'supermover') { section.hidden = true; return; }
+  section.hidden = false;
+  const arr = (loadSchedule().supermover) || DEFAULT_SUPERMOVER_SCHEDULE;
+  rows.innerHTML = WEEKDAYS.map((label, i) => {
+    const cur  = arr[i] || 'rest';
+    const opts = Object.entries(SUPERMOVER_SLOTS).map(([key, d]) =>
+      `<option value="${key}"${key === cur ? ' selected' : ''}>${d.label}</option>`).join('');
+    return `<div class="sched-row">
+      <span class="sched-day">${label}</span>
+      <select class="sched-select" data-dow="${i}">${opts}</select>
+    </div>`;
+  }).join('');
+  rows.querySelectorAll('.sched-select').forEach((sel) => {
+    sel.onchange = () => {
+      const s = loadSchedule();
+      const a = (s.supermover) ? [...s.supermover] : [...DEFAULT_SUPERMOVER_SCHEDULE];
+      a[parseInt(sel.dataset.dow, 10)] = sel.value;
+      s.supermover = a;
+      saveSchedule(s);
+      renderRoutineRow(); // refresh the week preview strip
+      render();
+    };
+  });
 }
 
 function renderRoutineRow() {
@@ -1682,6 +1737,7 @@ function renderRoutineRow() {
       SETTINGS.routine = key;
       saveSettings(SETTINGS);
       paint(key);
+      renderScheduleEditor();
       render();
     };
     row.appendChild(c);
@@ -1691,6 +1747,7 @@ function renderRoutineRow() {
 
 function openSettings() {
   renderRoutineRow();
+  renderScheduleEditor();
   refreshCardStatus();
   document.getElementById('setAutoRest').checked = SETTINGS.autoRest;
   document.getElementById('restLenInput').value = SETTINGS.restDefault;
@@ -1831,6 +1888,12 @@ document.getElementById('clearCardsBtn').onclick = async () => {
 document.getElementById('settingsBtn').onclick = openSettings;
 document.getElementById('addReminder').onclick = addReminderToCalendar;
 document.getElementById('checkUpdate').onclick = checkForUpdate;
+document.getElementById('resetSchedule').onclick = () => {
+  saveSchedule({ supermover: [...DEFAULT_SUPERMOVER_SCHEDULE] });
+  renderScheduleEditor();
+  renderRoutineRow();
+  render();
+};
 settingsSheet.querySelectorAll('[data-close-settings]').forEach((el) => (el.onclick = closeSettings));
 settingsSheet.querySelectorAll('[data-restadj]').forEach((b) => {
   b.onclick = () => {
