@@ -42,7 +42,8 @@ If you're an assistant picking this project up fresh, read this section first.
   the structure in `rir`/`note`.
 - **localStorage keys:** `cal_log_v1` (log), `cal_session_v1` (custom Today
   session), `cal_settings_v1` (settings), `cal_hiit_v1` (last HIIT setup),
-  `cal_schedule_v1` (SuperMover weekly schedule).
+  `cal_schedule_v1` (SuperMover weekly schedule), `cal_override_v1` (one-off
+  session swap for a single date; self-expiring).
 
 ---
 
@@ -143,6 +144,16 @@ switching is non-destructive and instantly reversible.
   Pull / Legs / Full) that save immediately. Stored in `cal_schedule_v1`;
   the "Reset to default" button restores the Bioneer split. The Settings week
   preview strip and the Today tab both reflect the current schedule.
+
+#### One-off session swap
+
+Tapping **Change** next to the day's title on Today swaps *just today's*
+session (e.g. do Pull on Wednesday because you were tired on Tuesday). It is
+stored in `cal_override_v1` as `{ day, slot }` keyed by date, so it applies to
+that date only and is ignored once the date passes — no cleanup needed. It
+never writes to `cal_schedule_v1`, so the recurring week is untouched. The
+swapped day is marked with a ★ on Today and in the week strip, and
+"↩ Back to schedule" clears it.
 
 ### Exercise cards (on-device only)
 
@@ -266,6 +277,8 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
   immediately and are reflected on the Today tab and the Settings week strip.
   "Reset to default" restores the original Bioneer split. Stored in
   `cal_schedule_v1`.
+- **v31** — one-off "different session today" swap on the Today tab, which
+  leaves the recurring weekly schedule alone and expires by date.
 - **v30** — fix the custom schedule never being applied (`effectiveDays`
   compared a routine object to a string, so the stored schedule was always
   ignored); harden against a malformed stored schedule.

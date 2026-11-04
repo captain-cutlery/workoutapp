@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v30';
+const APP_VERSION = 'v31';
 const APP_BUILT = '4 Nov 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -300,12 +300,34 @@ const activeRoutine = () => ROUTINES[SETTINGS.routine] || ROUTINES.rr;
 
 // What Today should suggest: the user's saved session for 'rr', or the
 // weekday's session for a day-based routine. Returns { label, rest, items }.
+// ---------- Today's one-off override ----------
+// Lets you swap just today's session ("tired on Tuesday, do Pull on Wednesday")
+// WITHOUT editing the recurring weekly schedule. Keyed by date, so it expires
+// on its own — tomorrow goes back to the normal plan.
+const OVERRIDE_KEY = 'cal_override_v1';
+function loadOverride() {
+  try {
+    const o = JSON.parse(localStorage.getItem(OVERRIDE_KEY)) || {};
+    // Only today's entry is ever relevant; drop anything stale so this can't grow.
+    return (o && typeof o === 'object' && o.day === TODAY) ? o : {};
+  } catch { return {}; }
+}
+function saveOverride(slot) {
+  if (!slot) localStorage.removeItem(OVERRIDE_KEY);
+  else localStorage.setItem(OVERRIDE_KEY, JSON.stringify({ day: TODAY, slot }));
+}
+const todaysOverride = () => loadOverride().slot || null;
+
 function todaysPlan() {
   const r = activeRoutine();
   if (!r.days) return { label: 'Suggested session', rest: false, items: SESSION, note: '' };
   const days = effectiveDays(r);
-  const d = days[new Date().getDay()] || { label: 'Rest', rest: true, items: [] };
-  return { label: d.label, rest: !!d.rest, items: d.items, note: d.note || '' };
+  // A one-off override for today wins over the scheduled day.
+  const over = r.scheduleKey ? todaysOverride() : null;
+  const d = (over && SUPERMOVER_SLOTS[over])
+    || days[new Date().getDay()]
+    || { label: 'Rest', rest: true, items: [] };
+  return { label: d.label, rest: !!d.rest, items: d.items, note: d.note || '', overridden: !!over };
 }
 
 const RIR_OPTIONS = ['0 (failure)', '1–2 left', '3–4 left', 'Easy'];
@@ -432,11 +454,28 @@ function renderToday() {
     html += `<div class="week-summary">📅 This week: <b>${ws.sessions}</b> session${ws.sessions > 1 ? 's' : ''} · <b>${ws.sets}</b> sets${ws.reps ? ` · <b>${ws.reps}</b> reps` : ''}</div>`;
   }
 
-  // 'rr' keeps its editable session; day-based routines show the day's label.
+  // 'rr' keeps its editable session; day-based routines show the day's label
+  // plus a one-off "Change" for swapping just today.
   const editable = !routine.days;
-  html += `<div class="section-row"><div class="section-title">${editable ? 'Suggested session' : plan.label}</div>`
-    + (editable ? `<button id="editSession" class="link-btn">Edit</button>` : `<span class="routine-badge">${routine.name}</span>`)
+  html += `<div class="section-row"><div class="section-title">${plan.overridden ? '★ ' : ''}${editable ? 'Suggested session' : plan.label}</div>`
+    + (editable
+        ? `<button id="editSession" class="link-btn">Edit</button>`
+        : `<button id="changeToday" class="link-btn">Change</button>`)
     + `</div>`;
+
+  if (!editable) {
+    const cur = todaysOverride();
+    html += `<div id="todayPicker" class="today-picker" hidden>
+      <div class="today-picker-hint">Just for today — your weekly schedule stays as it is.</div>
+      <div class="chip-row">`
+      + Object.entries(SUPERMOVER_SLOTS).map(([key, d]) =>
+          `<button class="chip${key === cur ? ' sel' : ''}" data-slot="${key}">${d.short || d.label}</button>`).join('')
+      + (cur ? `<button class="chip chip-clear" data-slot="">↩ Back to schedule</button>` : '')
+      + `</div></div>`;
+    if (plan.overridden) {
+      html += `<div class="day-note">★ Swapped just for today. Tomorrow returns to your normal schedule.</div>`;
+    }
+  }
 
   // For weekday-based routines show the week at a glance, so it's obvious which
   // routine is active and what's coming up — including on rest days.
@@ -464,6 +503,16 @@ function renderToday() {
   wireEntries();
   const edit = document.getElementById('editSession');
   if (edit) edit.onclick = openSessionEditor;
+
+  // One-off "do a different session today" picker.
+  const change = document.getElementById('changeToday');
+  const picker = document.getElementById('todayPicker');
+  if (change && picker) {
+    change.onclick = () => { picker.hidden = !picker.hidden; };
+    picker.querySelectorAll('[data-slot]').forEach((b) => {
+      b.onclick = () => { saveOverride(b.dataset.slot || null); render(); };
+    });
+  }
 }
 
 // Display order for the Log tab's group headings. Movements are bucketed by
@@ -1683,9 +1732,15 @@ function weekOverviewHtml(routine) {
   const days = effectiveDays(routine);
   const names = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
   const today = new Date().getDay();
-  return `<div class="wk-plan">` + days.map((d, i) =>
-    `<div class="wk-plan-day${i === today ? ' is-today' : ''}${d.rest ? ' is-rest' : ''}">
-       <b>${names[i]}</b><span>${d.short || d.label}</span></div>`).join('') + `</div>`;
+  // A one-off override changes only today's cell, marked with a ★ so it's
+  // clearly a swap rather than a change to the weekly schedule.
+  const over = routine.scheduleKey ? todaysOverride() : null;
+  return `<div class="wk-plan">` + days.map((d, i) => {
+    const day = (i === today && over && SUPERMOVER_SLOTS[over]) ? SUPERMOVER_SLOTS[over] : d;
+    const swapped = i === today && !!over;
+    return `<div class="wk-plan-day${i === today ? ' is-today' : ''}${day.rest ? ' is-rest' : ''}${swapped ? ' is-swapped' : ''}">
+       <b>${names[i]}</b><span>${swapped ? '★' : ''}${day.short || day.label}</span></div>`;
+  }).join('') + `</div>`;
 }
 
 // Render the per-day schedule editor in Settings. Only shown when the
