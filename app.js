@@ -5,7 +5,7 @@
 
 // Bump this with each release; surfaced in Settings so you can confirm the
 // installed app matches the latest deploy. Keep in step with the sw.js cache.
-const APP_VERSION = 'v29';
+const APP_VERSION = 'v30';
 const APP_BUILT = '4 Nov 2026';
 const APP_LABEL = `${APP_VERSION} · ${APP_BUILT}`;
 
@@ -255,15 +255,19 @@ function loadSchedule() {
   catch { return {}; }
 }
 function saveSchedule(s) { localStorage.setItem(SCHEDULE_KEY, JSON.stringify(s)); }
-// Returns the effective days array for a routine. For supermover, reads the
-// user's stored schedule; falls back to the default split if none is saved.
+// Returns the effective days array for a routine: the user's stored schedule
+// for that routine if one is saved, otherwise the routine's default split.
+// Routines that support customising carry a `scheduleKey`.
 function effectiveDays(routine) {
-  if (!routine.days) return null;
-  if (routine === 'supermover') {
-    const arr = (loadSchedule().supermover) || DEFAULT_SUPERMOVER_SCHEDULE;
-    return arr.map((slot) => SUPERMOVER_SLOTS[slot] || SUPERMOVER_SLOTS.rest);
-  }
-  return routine.days;
+  if (!routine || !routine.days) return null;
+  const key = routine.scheduleKey;
+  if (!key) return routine.days;
+  const stored = loadSchedule()[key];
+  // Only trust a well-formed 7-day array; anything else falls back to default.
+  const arr = (Array.isArray(stored) && stored.length === 7)
+    ? stored
+    : DEFAULT_SUPERMOVER_SCHEDULE;
+  return arr.map((slot) => SUPERMOVER_SLOTS[slot] || SUPERMOVER_SLOTS.rest);
 }
 
 const ROUTINES = {
@@ -285,8 +289,9 @@ const ROUTINES = {
       row:    '3 × failure',
       hinge:  '3 × 50 (kettlebell swing)',
     },
-    // 0=Sun … 6=Sat — derived from the default schedule; overridden by the
-    // user's stored schedule (cal_schedule_v1) via effectiveDays().
+    // 0=Sun … 6=Sat — derived from the default schedule; overridden per-day by
+    // the user's stored schedule (cal_schedule_v1) via effectiveDays().
+    scheduleKey: 'supermover',
     days: DEFAULT_SUPERMOVER_SCHEDULE.map((s) => SUPERMOVER_SLOTS[s]),
   },
 };

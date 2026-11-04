@@ -252,6 +252,9 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
   immediately and are reflected on the Today tab and the Settings week strip.
   "Reset to default" restores the original Bioneer split. Stored in
   `cal_schedule_v1`.
+- **v30** — fix the custom schedule never being applied (`effectiveDays`
+  compared a routine object to a string, so the stored schedule was always
+  ignored); harden against a malformed stored schedule.
 
 ## Obsidian / PARA export & Syncthing workflow
 
