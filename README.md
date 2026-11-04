@@ -152,7 +152,7 @@ would serve them at a public URL). Instead the user imports their own copy:
 
 - **Settings → Exercise cards → Import** accepts a `.zip` or individual images.
 - The zip is read in-browser via `DecompressionStream('deflate-raw')` — no
-  library. Images are downscaled (max 1200px wide, WebP q85) and stored in
+  library. Images are downscaled (max 1400px wide, WebP q85) and stored in
   **IndexedDB** (`cal_cards`), keyed by movement id. Nothing is uploaded.
 - Filenames map to movement ids via `CARD_ALIASES` + `matchCardName()`.
   22 of the 23 supplied cards map. Only Pseudo-Planche Push-ups is unmatched
@@ -171,6 +171,12 @@ Implementation notes for a future session:
 - New movements are appended to `MOVEMENTS`; the Log tab buckets by `group`
   (see `GROUP_ORDER`) rather than array order, so appending is safe.
 - An unknown/removed routine id falls back to `rr`.
+- **Day resolution goes through `effectiveDays(routine)`** — never read
+  `routine.days` directly. A routine that can be customised carries a
+  `scheduleKey`; `effectiveDays()` looks that key up in `cal_schedule_v1` and
+  falls back to the routine's default `days[]` if nothing valid is stored
+  (it only trusts a 7-entry array). Callers pass the routine *object*, not the
+  key — comparing that object to a string was the v30 bug.
 
 ---
 
@@ -246,7 +252,15 @@ A service worker (and "Add to Home screen") needs HTTPS or `localhost`.
   programme-aware effort label.
 - **v25** — optional on-device exercise cards: import a zip/images in Settings,
   stored in IndexedDB, shown in the log sheet with tap-to-enlarge.
-- **v26–v28** — (details not recorded in this file)
+- **v26** — routine switch applies instantly on tap (no Save), plus a
+  week-at-a-glance strip on Today and in Settings.
+- **v27** — corrected the SuperMover sessions against the book's own text
+  listing (Full Body starts with Dips; Pike Push-ups primary with KB Halos as
+  the alt; KB swing optional on legs; OR-alternates noted); added Hindu Squats
+  and Step Up; warm-up "choose one" note per training day.
+- **v28** — Liquid Motion matched to the official cheat sheet (8 moves, 30s
+  each, continuous movement, 2–3 rounds); card viewer renders full-width and
+  scrolls so dense sheets stay readable; stored card width 1200 → 1400px.
 - **v29** — SuperMover weekly schedule editor: remap which day each training
   type falls on (Rest / Push / Pull / Legs / Full) from Settings; changes save
   immediately and are reflected on the Today tab and the Settings week strip.
